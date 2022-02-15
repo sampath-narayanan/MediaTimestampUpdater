@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using J4JSoftware.Logging;
 using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.QuickTime;
 using Microsoft.Extensions.Hosting;
 using MDE = MetadataExtractor;
 
@@ -37,10 +38,12 @@ namespace J4JSoftware.ExifTSUpdater
         {
             var changes = new List<FileChangeInfo>();
             string? changesFile;
+            bool errorsOnly;
 
             lock( _appConfig )
             {
                 changesFile = _appConfig.ChangesFile;
+                errorsOnly = _appConfig.ErrorsOnly;
 
                 if( !string.IsNullOrEmpty( changesFile ) )
                 {
@@ -66,30 +69,10 @@ namespace J4JSoftware.ExifTSUpdater
                     {
                         var mdDirectories = MDE.ImageMetadataReader.ReadMetadata( changes[ idx ].FilePath );
 
-                        var subIfDir = mdDirectories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
-                        if( subIfDir == null )
-                            changes[ idx ].ScanStatus = ScanStatus.MetaDataSubDirectoryNotFound;
-                        else
-                        {
-                            var dtTag = subIfDir.Tags.FirstOrDefault( x => x.Name == "Date/Time Original" );
+                        changes[idx].ScanStatus = GetTimestampTag( changes[ idx ].FilePath, out var timestamp );
 
-                            if( dtTag == null )
-                                changes[ idx ].ScanStatus = ScanStatus.DateTimeTagNotFound;
-                            else
-                            {
-                                if( DateTime.TryParseExact( dtTag.Description,
-                                                           "yyyy:MM:dd HH:mm:ss",
-                                                           CultureInfo.InvariantCulture,
-                                                           DateTimeStyles.None,
-                                                           out var dtTaken ) )
-                                {
-                                    changes[ idx ].DateTaken = dtTaken;
-                                    changes[ idx ].ScanStatus = ScanStatus.Okay;
-                                }
-                                else
-                                    changes[ idx ].ScanStatus = ScanStatus.DateTimeParsingFailed;
-                            }
-                        }
+                        if(changes[idx].ScanStatus == ScanStatus.Okay)
+                            changes[idx].DateTaken = timestamp;
                     }
                     catch( Exception )
                     {
@@ -109,7 +92,7 @@ namespace J4JSoftware.ExifTSUpdater
                     File.Create( changesFile );
 
                 await JsonSerializer.SerializeAsync( fileStream,
-                                                    changes,
+                                                    errorsOnly ? changes.Where(x=>x.ScanStatus != ScanStatus.Okay) : changes,
                                                     new JsonSerializerOptions() { WriteIndented = true },
                                                     cancellationToken );
             }
@@ -131,6 +114,68 @@ namespace J4JSoftware.ExifTSUpdater
                 Console.WriteLine( $"\nScan results written to {changesFile}" );
 
             _lifetime.StopApplication();
+        }
+
+        private ScanStatus GetTimestampTag( string filePath, out DateTime timestamp )
+        {
+            timestamp = DateTime.MinValue;
+
+            var mdDirectories = MDE.ImageMetadataReader.ReadMetadata(filePath);
+
+            var exifDir = mdDirectories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
+            if(exifDir != null )
+                return GetExifTimestampTag(exifDir, out timestamp );
+
+            var qtDir = mdDirectories.OfType<QuickTimeMovieHeaderDirectory>().FirstOrDefault();
+            return qtDir != null 
+                       ? GetQtTimestampTag( qtDir, out timestamp ) 
+                       : ScanStatus.MetaDataSubDirectoryNotFound;
+        }
+
+        private ScanStatus GetExifTimestampTag( ExifSubIfdDirectory directory, out DateTime timestamp )
+        {
+            timestamp = DateTime.MinValue;
+
+            var dtTag = directory.Tags.FirstOrDefault( x => x.Name == "Date/Time Original" );
+
+            if( dtTag == null )
+                return ScanStatus.DateTimeTagNotFound;
+
+            if( !DateTime.TryParseExact( dtTag.Description,
+                                        "yyyy:MM:dd HH:mm:ss",
+                                        CultureInfo.InvariantCulture,
+                                        DateTimeStyles.None,
+                                        out var dtTaken ) )
+                return ScanStatus.DateTimeParsingFailed;
+
+            timestamp = dtTaken;
+
+            return ScanStatus.Okay;
+        }
+
+        private ScanStatus GetQtTimestampTag(QuickTimeMovieHeaderDirectory directory, out DateTime timestamp)
+        {
+            timestamp = DateTime.MinValue;
+
+            var dtTag = directory.Tags.FirstOrDefault(x => x.Name == "Created");
+
+            if( dtTag == null || string.IsNullOrEmpty( dtTag.Description ) )
+                return ScanStatus.DateTimeTagNotFound;
+
+            var parts = dtTag.Description.Split( ' ', StringSplitOptions.RemoveEmptyEntries );
+            if( parts.Length != 5)
+                return ScanStatus.DateTimeParsingFailed;
+
+            if (!DateTime.TryParseExact(string.Join(' ', parts[1..]),
+                                        "MMM dd HH:mm:ss yyyy",
+                                        CultureInfo.InvariantCulture,
+                                        DateTimeStyles.None,
+                                        out var dtTaken))
+                return ScanStatus.DateTimeParsingFailed;
+
+            timestamp = dtTaken;
+
+            return ScanStatus.Okay;
         }
 
         public Task StopAsync( CancellationToken cancellationToken )
