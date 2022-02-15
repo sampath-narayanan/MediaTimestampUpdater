@@ -2,7 +2,7 @@
   "profiles": {
     "ExifTSUpdater": {
       "commandName": "Project",
-      "commandLineArgs": "/d \"D:\\Pix\\iCloud Archive\" /c Changes.json"
+      "commandLineArgs": "/d \"D:\\Pix\\iCloud Archive\" /c Changes.json /s"
     }
   }
 }

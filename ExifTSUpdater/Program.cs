@@ -86,6 +86,9 @@ namespace J4JSoftware.ExifTSUpdater
             options.Bind<AppConfig, string>( x => x.ChangesFile, "c" )!
                    .SetDescription( "JSON file showing changes to date created" );
 
+            options.Bind<AppConfig, bool>(x => x.ErrorsOnly, "e")!
+                   .SetDescription("only show errors in the changes file");
+
             options.Bind<AppConfig, string>(x => x.MediaDirectory, "d")!
                    .SetDefaultValue(Directory.GetCurrentDirectory())
                    .SetDescription("media directory to process");
