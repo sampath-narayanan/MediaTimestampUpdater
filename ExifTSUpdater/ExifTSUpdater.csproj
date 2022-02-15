@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>Mark A. Olbert</Authors>
+    <Company>Jump for Joy Software</Company>
+    <Description>a console app for changing file creation timestamps to match the date taken/media created EXIF info in media files</Description>
+    <Copyright>2022 Mark A. Olbert all rights reserved</Copyright>
+    <Version>0.5.0</Version>
+    <AssemblyName>J4JSoftware.ExifTSUpdater</AssemblyName>
+    <RootNamespace>J4JSoftware.ExifTSUpdater</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MetadataExtractor" Version="2.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\J4JCommandLine\ColorfulHelp\ColorfulHelp.csproj" />
+    <ProjectReference Include="..\..\J4JCommandLine\J4JCommandLine\J4JCommandLine.csproj" />
+    <ProjectReference Include="..\..\J4JLogging\J4JLogging\J4JLogging.csproj" />
+    <ProjectReference Include="..\..\ProgrammingUtilities\DependencyInjection\DependencyInjection.csproj" />
+  </ItemGroup>
+
+</Project>

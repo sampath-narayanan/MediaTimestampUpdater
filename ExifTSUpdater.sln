@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExifTSUpdater", "ExifTSUpdater\ExifTSUpdater.csproj", "{3F525911-B6DA-4338-B0BA-1B690FEA97DD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ext", "ext", "{F25E13D1-9751-4903-BF81-235C9FD97552}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "J4JCommandLine", "..\J4JCommandLine\J4JCommandLine\J4JCommandLine.csproj", "{8B9721D3-284D-478B-B593-6C5785106AA7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyInjection", "..\ProgrammingUtilities\DependencyInjection\DependencyInjection.csproj", "{096115C3-5682-43E5-805C-50D429570DD3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorfulHelp", "..\J4JCommandLine\ColorfulHelp\ColorfulHelp.csproj", "{B7905EE2-0111-43CC-84BC-48C5378F412D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "J4JLogging", "..\J4JLogging\J4JLogging\J4JLogging.csproj", "{197214CB-494D-474D-80FB-8AFFB14DAF6B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B9721D3-284D-478B-B593-6C5785106AA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B9721D3-284D-478B-B593-6C5785106AA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B9721D3-284D-478B-B593-6C5785106AA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B9721D3-284D-478B-B593-6C5785106AA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{096115C3-5682-43E5-805C-50D429570DD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{096115C3-5682-43E5-805C-50D429570DD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{096115C3-5682-43E5-805C-50D429570DD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{096115C3-5682-43E5-805C-50D429570DD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7905EE2-0111-43CC-84BC-48C5378F412D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7905EE2-0111-43CC-84BC-48C5378F412D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7905EE2-0111-43CC-84BC-48C5378F412D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7905EE2-0111-43CC-84BC-48C5378F412D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{197214CB-494D-474D-80FB-8AFFB14DAF6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{197214CB-494D-474D-80FB-8AFFB14DAF6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{197214CB-494D-474D-80FB-8AFFB14DAF6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{197214CB-494D-474D-80FB-8AFFB14DAF6B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8B9721D3-284D-478B-B593-6C5785106AA7} = {F25E13D1-9751-4903-BF81-235C9FD97552}
+		{096115C3-5682-43E5-805C-50D429570DD3} = {F25E13D1-9751-4903-BF81-235C9FD97552}
+		{B7905EE2-0111-43CC-84BC-48C5378F412D} = {F25E13D1-9751-4903-BF81-235C9FD97552}
+		{197214CB-494D-474D-80FB-8AFFB14DAF6B} = {F25E13D1-9751-4903-BF81-235C9FD97552}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7AA7DF8D-2B60-4AA8-ACC1-F0994055CA80}
+	EndGlobalSection
+EndGlobal
