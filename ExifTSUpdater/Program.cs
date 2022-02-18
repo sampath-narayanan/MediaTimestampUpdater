@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Autofac;
 using J4JSoftware.Configuration.CommandLine;
@@ -9,55 +10,89 @@ using J4JSoftware.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace J4JSoftware.ExifTSUpdater
 {
     public class Program
     {
+        private static J4JHostConfiguration _hostConfig;
+        private static IJ4JHost? _host;
+
+        static Program()
+        {
+            _hostConfig = new J4JHostConfiguration()
+                          .Publisher("J4JSoftware")
+                          .ApplicationName("ExifTSUpdater")
+                          .LoggerInitializer(InitializeLogger)
+                          .AddDependencyInjectionInitializers(SetupDependencyInjection)
+                          .AddServicesInitializers(InitializeServices)
+                          .FilePathTrimmer(FilePathTrimmer);
+
+            _hostConfig.AddCommandLineProcessing(CommandLineOperatingSystems.Windows)
+                      .OptionsInitializer(SetupOptions);
+
+        }
+
         static void Main( string[] args )
         {
-            var hostConfig = new J4JHostConfiguration()
-                             .Publisher( "J4JSoftware" )
-                             .ApplicationName( "ExifTSUpdater" )
-                             .AddDependencyInjectionInitializers(SetupDependencyInjection)
-                             .AddServicesInitializers(InitializeServices)
-                             .FilePathTrimmer( FilePathTrimmer );
-
-            hostConfig.AddCommandLineProcessing( CommandLineOperatingSystems.Windows )
-                      .OptionsInitializer( SetupOptions );
-
-            if( hostConfig.MissingRequirements != J4JHostRequirements.AllMet )
+            if( _hostConfig.MissingRequirements != J4JHostRequirements.AllMet )
             {
-                Console.WriteLine( $"Missing J4JHostConfiguration items: {hostConfig.MissingRequirements}" );
-                Environment.ExitCode = 1;
-
+                ReportLaunchFailure($"Missing J4JHostConfiguration items: {_hostConfig.MissingRequirements}" );
                 return;
             }
 
-            var host = hostConfig.Build();
-            if( host == null )
+            _host = _hostConfig.Build();
+            if( _host == null )
             {
-                Console.WriteLine( "Could not create IHost" );
-                Environment.ExitCode = 1;
-
+                ReportLaunchFailure( "Could not create IHost" );
                 return;
             }
 
-            var config = host.Services.GetRequiredService<IConfiguration>();
+            var config = _host.Services.GetService<IConfiguration>();
             if( config == null )
-                throw new NullReferenceException( "Undefined IConfiguration" );
+            {
+                ReportLaunchFailure("Undefined IConfiguration" );
+                return;
+            }
 
             var parsed = config.Get<AppConfig>();
+            if( parsed == null )
+            {
+                ReportLaunchFailure("Could not parse command line");
+                return;
+            }
 
             if( parsed.HelpRequested )
             {
-                var help = new ColorHelpDisplay( host.CommandLineLexicalElements!, host.Options! );
+                var help = new ColorHelpDisplay( _host.CommandLineLexicalElements!, _host.Options! );
                 help.Display();
 
                 return;
             }
 
-            host.Run();
+            _host.Run();
+        }
+
+        private static void ReportLaunchFailure( string mesg )
+        {
+            Console.WriteLine(mesg);
+
+            if( _host != null )
+            {
+                var logger = _host.Services.GetRequiredService<IJ4JLogger>();
+                logger?.OutputCache( _hostConfig.Logger );
+            }
+
+            Environment.ExitCode = 1;
+        }
+
+        private static void InitializeLogger( IConfiguration config, J4JLoggerConfiguration loggerConfig )
+        {
+            loggerConfig.SerilogConfiguration
+                        .WriteTo.Console()
+                        .WriteTo.File( Path.Combine( Directory.GetCurrentDirectory(), "log.txt" ),
+                                      rollingInterval: RollingInterval.Day );
         }
 
         private static void SetupDependencyInjection( HostBuilderContext hbc, ContainerBuilder builder )
@@ -68,6 +103,16 @@ namespace J4JSoftware.ExifTSUpdater
                                   return config.Get<AppConfig>();
                               } )
                    .AsImplementedInterfaces()
+                   .SingleInstance();
+
+            var typeTests = new TypeTests<ITimestampExtractor>()
+                            .AddTests( PredefinedTypeTests.OnlyJ4JLoggerRequired )
+                            .AddTests( PredefinedTypeTests.NonAbstract );
+
+            builder.RegisterTypeAssemblies<Program>( typeTests );
+
+            builder.RegisterType<TimestampExtractors>()
+                   .As<ITimestampExtractors>()
                    .SingleInstance();
         }
 
@@ -83,17 +128,14 @@ namespace J4JSoftware.ExifTSUpdater
                    .SetDefaultValue( AppConfig.DefaultExtensions.ToList())
                    .SetDescription("media extensions to process");
 
-            options.Bind<AppConfig, string>( x => x.ChangesFile, "c" )!
-                   .SetDescription( "JSON file showing changes to date created" );
-
-            options.Bind<AppConfig, bool>(x => x.ErrorsOnly, "e")!
-                   .SetDescription("only show errors in the changes file");
+            options.Bind<AppConfig, InfoToReport>( x => x.InfoToReport, "r" )!
+                   .SetDescription( "information to report from file scanning (multiple flag values allowed)" );
 
             options.Bind<AppConfig, string>(x => x.MediaDirectory, "d")!
                    .SetDefaultValue(Directory.GetCurrentDirectory())
                    .SetDescription("media directory to process");
 
-            options.Bind<AppConfig, bool>( x => x.NoChanges, "s" )!
+            options.Bind<AppConfig, bool>( x => x.SkipChanges, "s" )!
                    .SetDefaultValue( false )
                    .SetDescription( "flag to indicate no changes should actually be made (just generate the output file)" );
 

@@ -20,5 +20,7 @@ namespace J4JSoftware.ExifTSUpdater
         public DateTime DateCreated { get; }
         public DateTime? DateTaken { get; set; }
         public ScanStatus ScanStatus { get; set; } = ScanStatus.NotScanned;
+        public string? ExtractorName { get; set; }
+        public List<TagInfo> Tags { get; } = new();
     }
 }

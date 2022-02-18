@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <PackageReference Include="MetadataExtractor" Version="2.7.1" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +25,7 @@
     <ProjectReference Include="..\..\J4JCommandLine\J4JCommandLine\J4JCommandLine.csproj" />
     <ProjectReference Include="..\..\J4JLogging\J4JLogging\J4JLogging.csproj" />
     <ProjectReference Include="..\..\ProgrammingUtilities\DependencyInjection\DependencyInjection.csproj" />
+    <ProjectReference Include="..\..\ProgrammingUtilities\TopologicalSort\TopologicalSort.csproj" />
   </ItemGroup>
 
 </Project>

@@ -14,9 +14,12 @@ namespace J4JSoftware.ExifTSUpdater
 
         public List<string> Extensions { get; set; } = DefaultExtensions.ToList();
         public string MediaDirectory { get; set; } = Directory.GetCurrentDirectory();
-        public string ChangesFile { get; set; } = string.Empty;
-        public bool ErrorsOnly { get; set; }
-        public bool NoChanges { get; set; }
+
+        public InfoToReport InfoToReport { get; set; } = InfoToReport.Nothing;
+        public bool ReportChanges => (InfoToReport & InfoToReport.AllTimestamps) != 0;
+        public bool ReportTags => InfoToReport != InfoToReport.Nothing;
+
+        public bool SkipChanges { get; set; }
         public bool HelpRequested { get; set; }
 
         public List<FileChangeInfo> Changes { get; } = new();

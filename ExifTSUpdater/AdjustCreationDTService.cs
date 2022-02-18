@@ -37,7 +37,7 @@ namespace J4JSoftware.ExifTSUpdater
         {
             lock( _appConfig )
             {
-                if( _appConfig.NoChanges )
+                if( _appConfig.SkipChanges )
                 {
                     Console.WriteLine("\nSkipping adjusting file creation timestamps");
 
@@ -53,7 +53,7 @@ namespace J4JSoftware.ExifTSUpdater
                 {
                     var curChange = _appConfig.Changes[ idx ];
 
-                    if( curChange.ScanStatus != ScanStatus.Okay )
+                    if( curChange.ScanStatus != ScanStatus.Valid )
                         skipped++;
                     else
                         File.SetCreationTime(curChange.FilePath, curChange.DateTaken!.Value);

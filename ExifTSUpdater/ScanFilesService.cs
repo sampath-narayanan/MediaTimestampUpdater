@@ -18,17 +18,27 @@ namespace J4JSoftware.ExifTSUpdater
     public class ScanFilesService : IHostedService
     {
         private readonly IAppConfig _appConfig;
+        private readonly ITimestampExtractors _tsExtractors;
         private readonly IHostApplicationLifetime _lifetime;
+        private readonly List<FileChangeInfo> _changes = new();
+        private readonly uint _scanStatusMask;
         private readonly IJ4JLogger _logger;
 
         public ScanFilesService(
             IAppConfig appConfig,
+            ITimestampExtractors tsExtractors,
             IHostApplicationLifetime lifetime,
             IJ4JLogger logger
         )
         {
             _appConfig = appConfig;
+            _tsExtractors = tsExtractors;
             _lifetime = lifetime;
+
+            for( var idx = 0; idx < 32; idx++ )
+            {
+                _scanStatusMask += (uint) 1 << idx;
+            }
 
             _logger = logger;
             _logger.SetLoggedType( GetType() );
@@ -36,146 +46,93 @@ namespace J4JSoftware.ExifTSUpdater
 
         public async Task StartAsync( CancellationToken cancellationToken )
         {
-            var changes = new List<FileChangeInfo>();
-            string? changesFile;
-            bool errorsOnly;
+            _changes.Clear();
 
-            lock( _appConfig )
+            _appConfig.Extensions
+                      .ForEach( x =>
+                                {
+                                    var fileExt = x[ 0 ] == '.' ? $"*{x}" : $"*.{x}";
+
+                                    _changes.AddRange( Directory.EnumerateFiles( _appConfig.MediaDirectory,
+                                                                                fileExt )
+                                                                .Select( f => new FileChangeInfo( f ) ) );
+                                } );
+
+            for( var idx = 0; idx < _changes.Count; idx++ )
             {
-                changesFile = _appConfig.ChangesFile;
-                errorsOnly = _appConfig.ErrorsOnly;
-
-                if( !string.IsNullOrEmpty( changesFile ) )
+                try
                 {
-                    if( !Path.IsPathRooted( changesFile ) )
-                        changesFile = Path.Combine( Directory.GetCurrentDirectory(), changesFile );
-
-                    if( string.IsNullOrEmpty( Path.GetExtension( changesFile ) ) )
-                        changesFile = $"{changesFile}.json";
+                    _tsExtractors.GetTimestamp( _changes[ idx ] );
+                }
+                catch( Exception )
+                {
+                    _changes[ idx ].ScanStatus = ScanStatus.ExceptionOnScan;
                 }
 
-                _appConfig.Extensions
-                          .ForEach( x =>
-                                    {
-                                        var fileExt = x[ 0 ] == '.' ? $"*{x}" : $"*.{x}";
-
-                                        changes.AddRange( Directory.EnumerateFiles( _appConfig.MediaDirectory, fileExt )
-                                                                   .Select( f => new FileChangeInfo( f ) ) );
-                                    } );
-
-                for( var idx = 0; idx < changes.Count; idx++ )
-                {
-                    try
-                    {
-                        var mdDirectories = MDE.ImageMetadataReader.ReadMetadata( changes[ idx ].FilePath );
-
-                        changes[idx].ScanStatus = GetTimestampTag( changes[ idx ].FilePath, out var timestamp );
-
-                        if(changes[idx].ScanStatus == ScanStatus.Okay)
-                            changes[idx].DateTaken = timestamp;
-                    }
-                    catch( Exception )
-                    {
-                        changes[ idx ].ScanStatus = ScanStatus.ExceptionOnScan;
-                    }
-
-                    Console.Write( $"Scanned {( idx + 1 ):n0} of {changes.Count:n0} files\r" );
-                }
-
-                _appConfig.Changes.Clear();
-                _appConfig.Changes.AddRange( changes );
+                Console.Write( $"Scanned {( idx + 1 ):n0} of {_changes.Count:n0} files\r" );
             }
 
-            if( !string.IsNullOrEmpty(changesFile) )
-            {
-                await using var fileStream =
-                    File.Create( changesFile );
+            _appConfig.Changes.Clear();
+            _appConfig.Changes.AddRange( _changes );
 
-                await JsonSerializer.SerializeAsync( fileStream,
-                                                    errorsOnly ? changes.Where(x=>x.ScanStatus != ScanStatus.Okay) : changes,
-                                                    new JsonSerializerOptions() { WriteIndented = true },
-                                                    cancellationToken );
-            }
+            Console.WriteLine( $"\n\n{_changes.Count:n0} files scanned" );
 
-            Console.WriteLine($"\n\n{changes.Count:n0} files scanned");
+            ReportScanStatusCount( ScanStatus.NotScanned );
+            ReportScanStatusCount( ScanStatus.SupportedMetadataDirectoryFound );
+            ReportScanStatusCount( ScanStatus.DateTimeTagFound );
+            ReportScanStatusCount( ScanStatus.ExceptionOnScan );
 
-            foreach( var scanStatus in new[]
-                                       {
-                                           ScanStatus.ExceptionOnScan,
-                                           ScanStatus.MetaDataSubDirectoryNotFound,
-                                           ScanStatus.DateTimeTagNotFound,
-                                           ScanStatus.DateTimeParsingFailed
-                                       } )
-            {
-                Console.WriteLine($"\t{scanStatus.GetDescription()}: {changes.Count(x => x.ScanStatus == scanStatus):n0}");
-            }
-
-            if( !string.IsNullOrEmpty( changesFile ) )
-                Console.WriteLine( $"\nScan results written to {changesFile}" );
+            await OutputJsonFile( cancellationToken );
 
             _lifetime.StopApplication();
         }
 
-        private ScanStatus GetTimestampTag( string filePath, out DateTime timestamp )
+        private void ReportScanStatusCount( ScanStatus scanStatus )
         {
-            timestamp = DateTime.MinValue;
+            var description = scanStatus switch
+                              {
+                                  ScanStatus.NotScanned                      => "Could not find metadata directory",
+                                  ScanStatus.SupportedMetadataDirectoryFound => "Could not find date/time tag(s)",
+                                  ScanStatus.DateTimeTagFound                  => "Could not parse date/time text",
+                                  ScanStatus.ExceptionOnScan                 => "Exception encountered in extraction",
+                                  _                                          => string.Empty
+                              };
 
-            var mdDirectories = MDE.ImageMetadataReader.ReadMetadata(filePath);
+            if( string.IsNullOrEmpty( description ) )
+                return;
 
-            var exifDir = mdDirectories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
-            if(exifDir != null )
-                return GetExifTimestampTag(exifDir, out timestamp );
+            var numericStatus = (uint) scanStatus;
+            var flippedNumericStatus = numericStatus ^ _scanStatusMask;
 
-            var qtDir = mdDirectories.OfType<QuickTimeMovieHeaderDirectory>().FirstOrDefault();
-            return qtDir != null 
-                       ? GetQtTimestampTag( qtDir, out timestamp ) 
-                       : ScanStatus.MetaDataSubDirectoryNotFound;
+            var errorCount = _changes.Count(x => (x.ScanStatus & scanStatus) == scanStatus
+                                                 && ((uint) x.ScanStatus & flippedNumericStatus) == 0);
+
+            Console.WriteLine($"\t{description}: {errorCount:n0}");
         }
 
-        private ScanStatus GetExifTimestampTag( ExifSubIfdDirectory directory, out DateTime timestamp )
+        private async Task OutputJsonFile( CancellationToken cancellationToken )
         {
-            timestamp = DateTime.MinValue;
+            if( !_appConfig.ReportChanges )
+                return;
 
-            var dtTag = directory.Tags.FirstOrDefault( x => x.Name == "Date/Time Original" );
+            var toReport = _appConfig.InfoToReport switch
+                           {
+                               InfoToReport.AllTimestamps => _changes,
+                               InfoToReport.InvalidTimestamps =>
+                                   _changes.Where(x => x.ScanStatus != ScanStatus.Valid),
+                               InfoToReport.ValidTimestamps => _changes.Where(x => x.ScanStatus == ScanStatus.Valid),
+                               _                            => Enumerable.Empty<FileChangeInfo>()
+                           };
 
-            if( dtTag == null )
-                return ScanStatus.DateTimeTagNotFound;
+            await using var fileStream =
+                File.Create( Path.Combine( Directory.GetCurrentDirectory(), "changes.json" ) );
 
-            if( !DateTime.TryParseExact( dtTag.Description,
-                                        "yyyy:MM:dd HH:mm:ss",
-                                        CultureInfo.InvariantCulture,
-                                        DateTimeStyles.None,
-                                        out var dtTaken ) )
-                return ScanStatus.DateTimeParsingFailed;
+            await JsonSerializer.SerializeAsync( fileStream,
+                                                toReport,
+                                                new JsonSerializerOptions() { WriteIndented = true },
+                                                cancellationToken );
 
-            timestamp = dtTaken;
-
-            return ScanStatus.Okay;
-        }
-
-        private ScanStatus GetQtTimestampTag(QuickTimeMovieHeaderDirectory directory, out DateTime timestamp)
-        {
-            timestamp = DateTime.MinValue;
-
-            var dtTag = directory.Tags.FirstOrDefault(x => x.Name == "Created");
-
-            if( dtTag == null || string.IsNullOrEmpty( dtTag.Description ) )
-                return ScanStatus.DateTimeTagNotFound;
-
-            var parts = dtTag.Description.Split( ' ', StringSplitOptions.RemoveEmptyEntries );
-            if( parts.Length != 5)
-                return ScanStatus.DateTimeParsingFailed;
-
-            if (!DateTime.TryParseExact(string.Join(' ', parts[1..]),
-                                        "MMM dd HH:mm:ss yyyy",
-                                        CultureInfo.InvariantCulture,
-                                        DateTimeStyles.None,
-                                        out var dtTaken))
-                return ScanStatus.DateTimeParsingFailed;
-
-            timestamp = dtTaken;
-
-            return ScanStatus.Okay;
+            Console.WriteLine( $"\nTimestamp change results written to {fileStream.Name}" );
         }
 
         public Task StopAsync( CancellationToken cancellationToken )

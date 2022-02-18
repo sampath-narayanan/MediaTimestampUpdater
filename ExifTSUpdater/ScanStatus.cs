@@ -9,33 +9,17 @@ using System.Threading.Tasks;
 
 namespace J4JSoftware.ExifTSUpdater
 {
+    [Flags]
     public enum ScanStatus
     {
-        NotScanned,
-        Okay,
-        [Description("Metadata subdirectory not found")]
-        MetaDataSubDirectoryNotFound,
-        [Description("Date/time taken not found")]
-        DateTimeTagNotFound,
-        [Description("Could not parse date/time taken")]
-        DateTimeParsingFailed,
-        [Description("Exception encountered on scan")]
-        ExceptionOnScan
-    }
+        SupportedMetadataDirectoryFound = 1 << 0,
+        DateTimeTagFound = 1 << 1,
+        DateTimeParsed = 1 << 2,
+        
+        ExceptionOnScan = 1 << 31,
 
-    public static class ScanStatusExtensions
-    {
-        public static string GetDescription( this ScanStatus status )
-        {
-            var enumFieldName = typeof( ScanStatus ).GetEnumName( status )!;
-            var enumField = typeof( ScanStatus ).GetField( enumFieldName );
+        NotScanned = 0,
 
-            if( enumField == null )
-                return enumFieldName!;
-
-            return enumField.GetCustomAttribute<DescriptionAttribute>( false )
-                                    ?.Description
-                           ?? enumFieldName;
-        }
+        Valid = SupportedMetadataDirectoryFound | DateTimeTagFound | DateTimeParsed
     }
 }
