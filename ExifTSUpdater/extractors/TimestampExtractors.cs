@@ -24,27 +24,7 @@ namespace J4JSoftware.ExifTSUpdater
         {
             _appConfig = appConfig;
 
-            var temp = tsExtractors.ToList();
-            var topoList = new Nodes<ITimestampExtractor>();
-
-            foreach( var tsExtractor in temp )
-            {
-                var predAttr = tsExtractor.GetType().GetCustomAttribute<PredecessorAttribute>( false );
-                if( predAttr == null )
-                    continue;
-
-                if( predAttr.Predecessor == null )
-                    topoList.AddIndependentNode( tsExtractor );
-                else
-                {
-                    var predecessor = temp.FirstOrDefault( x => x.GetType() == predAttr.Predecessor );
-                    if( predecessor == null )
-                        throw new
-                            NullReferenceException( $"Couldn't find predecessor extractor {predAttr.Predecessor.Name}" );
-
-                    topoList.AddDependentNode( tsExtractor, predecessor );
-                }
-            }
+            var topoList = tsExtractors.ToNodeList( logger: logger );
 
             if( !topoList.Sort( out var sorted, out var remainingEdges ) )
                 throw new

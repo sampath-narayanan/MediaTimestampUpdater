@@ -1,4 +1,5 @@
 ﻿using J4JSoftware.Logging;
+using J4JSoftware.Utilities;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.FileSystem;
 using MetadataExtractor.Formats.FileType;
