@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExifTSUpdater", "ExifTSUpdater\ExifTSUpdater.csproj", "{3F525911-B6DA-4338-B0BA-1B690FEA97DD}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ext", "ext", "{F25E13D1-9751-4903-BF81-235C9FD97552}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "J4JCommandLine", "..\J4JCommandLine\J4JCommandLine\J4JCommandLine.csproj", "{8B9721D3-284D-478B-B593-6C5785106AA7}"
@@ -19,16 +17,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeUtilities", "..\Program
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TopologicalSort", "..\ProgrammingUtilities\TopologicalSort\TopologicalSort.csproj", "{AA469C6C-BB2D-4C69-84AB-1EAB4DCCC593}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaTimestampUpdater", "MediaTimestampUpdater\MediaTimestampUpdater.csproj", "{102A6932-18FB-4716-831E-A84907D92ED5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3F525911-B6DA-4338-B0BA-1B690FEA97DD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8B9721D3-284D-478B-B593-6C5785106AA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8B9721D3-284D-478B-B593-6C5785106AA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B9721D3-284D-478B-B593-6C5785106AA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -53,6 +49,10 @@ Global
 		{AA469C6C-BB2D-4C69-84AB-1EAB4DCCC593}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA469C6C-BB2D-4C69-84AB-1EAB4DCCC593}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA469C6C-BB2D-4C69-84AB-1EAB4DCCC593}.Release|Any CPU.Build.0 = Release|Any CPU
+		{102A6932-18FB-4716-831E-A84907D92ED5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{102A6932-18FB-4716-831E-A84907D92ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{102A6932-18FB-4716-831E-A84907D92ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{102A6932-18FB-4716-831E-A84907D92ED5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
