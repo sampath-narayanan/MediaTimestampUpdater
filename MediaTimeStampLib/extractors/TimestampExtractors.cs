@@ -38,6 +38,11 @@ namespace J4JSoftware.ExifTSUpdater
 
             _logger = logger;
             _logger.SetLoggedType( GetType() );
+
+            foreach( var ext in _supportedExtensions )
+            {
+                _logger.Information<string>("Found date/time extractor for {0}", ext);
+            }
         }
 
         public IReadOnlyCollection<string> SupportedExtensions => _supportedExtensions;
