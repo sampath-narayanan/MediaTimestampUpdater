@@ -29,6 +29,7 @@ namespace MediaTimestampUpdater
 
         private string? _folderPath;
         private bool _scanSubfolders;
+        private bool _scanCompleted;
         private Visibility _progressBarVisibility = Visibility.Collapsed;
         private bool _progBarIndeterminate = true;
         private ObservableCollection<MediaFileViewModel> _fileInfo = new();
@@ -52,6 +53,7 @@ namespace MediaTimestampUpdater
             _logger.SetLoggedType( GetType() );
 
             PickFolderCommand = new AsyncRelayCommand( PickHolderHandler );
+            AdjustTimestampsCommand = new AsyncRelayCommand( AdjustTimestampsHandler );
         }
 
         internal IntPtr ViewHandle { get; set; }
@@ -71,6 +73,8 @@ namespace MediaTimestampUpdater
             folderPicker.FileTypeFilter.Add("*");
 
             Windows.Storage.StorageFolder folder = await folderPicker.PickSingleFolderAsync();
+
+            ScanCompleted = false;
 
             if (folder != null)
             {
@@ -94,6 +98,8 @@ namespace MediaTimestampUpdater
                                 } );
 
                 ProgressBarVisibility = Visibility.Collapsed;
+
+                ScanCompleted = true;
             }
             else
             {
@@ -115,6 +121,17 @@ namespace MediaTimestampUpdater
             return retVal;
         }
 
+        public AsyncRelayCommand AdjustTimestampsCommand { get; }
+
+        private async Task AdjustTimestampsHandler()
+        {
+            ProgressBarVisibility = Visibility.Visible;
+
+            await Task.Run( async () => await _adjustCreationDTService.StartAsync( _tokenSource.Token ) );
+
+            ProgressBarVisibility = Visibility.Collapsed;
+        }
+
         public string? FolderPath
         {
             get => _folderPath;
@@ -125,6 +142,12 @@ namespace MediaTimestampUpdater
         {
             get => _scanSubfolders;
             set => SetProperty( ref _scanSubfolders, value );
+        }
+
+        public bool ScanCompleted
+        {
+            get => _scanCompleted;
+            set => SetProperty( ref _scanCompleted, value );
         }
 
         public Visibility ProgressBarVisibility

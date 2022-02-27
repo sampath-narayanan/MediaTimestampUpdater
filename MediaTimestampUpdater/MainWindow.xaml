@@ -72,7 +72,9 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Button Grid.Row="0" Grid.Column="0" >
+            <Button Grid.Row="0" Grid.Column="0"
+                    IsEnabled="{Binding ScanCompleted}"
+                    Command="{Binding AdjustTimestampsCommand}">
                 Adjust
             </Button>
 
