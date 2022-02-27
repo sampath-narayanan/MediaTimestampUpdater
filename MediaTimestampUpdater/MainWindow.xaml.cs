@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +34,7 @@ namespace MediaTimestampUpdater
             Title = "Media Timestamp Updater";
             ViewModel = App.Current.Host.Services.GetRequiredService<MainViewModel>();
 
-            ViewModel.ViewHandle = WinRT.Interop.WindowNative.GetWindowHandle( this );
+            ViewModel.ViewHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
             // adjust initial window size
             var windowId = Win32Interop.GetWindowIdFromWindow(ViewModel.ViewHandle);
@@ -47,5 +48,15 @@ namespace MediaTimestampUpdater
         }
 
         internal MainViewModel ViewModel { get; }
+
+        private async void ShowLog_Click( object sender, RoutedEventArgs e )
+        {
+            var dlg = new LogViewer
+                      {
+                          XamlRoot = App.Current.MainWindow!.Content.XamlRoot
+                      };
+
+            await dlg.ShowAsync();
+        }
     }
 }

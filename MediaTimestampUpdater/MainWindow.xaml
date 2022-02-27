@@ -38,7 +38,7 @@
             <Border Grid.Row="0" Grid.Column="1" 
                     BorderThickness="0,0,0,1"
                     BorderBrush="DarkGray">
-                <TextBlock x:Name="FolderPathTbx" Text="{Binding FolderPath}"
+                <TextBlock Text="{Binding FolderPath}"
                            MinWidth="200"/>
             </Border>
 
@@ -79,7 +79,8 @@
                 Adjust
             </Button>
 
-            <Button Grid.Row="0" Grid.Column="1">
+            <Button Grid.Row="0" Grid.Column="1"
+                    Click="ShowLog_Click">
                 View Log
             </Button>
 
@@ -91,9 +92,6 @@
 
         </Grid>
 
-        <StackPanel Orientation="Horizontal">
-
-        </StackPanel>
-
     </StackPanel>
+
 </Window>

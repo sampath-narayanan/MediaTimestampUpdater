@@ -11,9 +11,10 @@
                 <ResourceDictionary Source="DefaultResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
-        </ResourceDictionary>
 
-        <local:LogViewModel x:Key="LogViewModel"/>
+            <local:LogViewModel x:Key="LogEvents"/>
+
+        </ResourceDictionary>
 
     </Application.Resources>
 </Application>

@@ -10,17 +10,11 @@
     <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
-	  <Nullable>enable</Nullable>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="LogViewer.xaml.cs" />
-  </ItemGroup>
   <ItemGroup>
     <None Remove="DefaultResources.xaml" />
     <None Remove="LogViewer.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Remove="LogViewer.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,12 +28,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.2" />
+	<PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.2" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22000.197" />
-    <PackageReference Include="Syncfusion.Core.WinUI" Version="19.4.0.53" />
-    <PackageReference Include="Syncfusion.Grid.WinUI" Version="19.4.0.53" />
-    <PackageReference Include="Syncfusion.Licensing" Version="19.4.0.53" />
+	<PackageReference Include="Syncfusion.Core.WinUI" Version="19.4.0.53" />
+	<PackageReference Include="Syncfusion.Grid.WinUI" Version="19.4.0.53" />
+	<PackageReference Include="Syncfusion.Licensing" Version="19.4.0.53" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
@@ -51,6 +45,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MediaTimeStampLib\MediaTimeStampLib.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="LogViewer.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="DefaultResources.xaml">

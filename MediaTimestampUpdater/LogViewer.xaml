@@ -1,0 +1,55 @@
+﻿<ContentDialog
+    x:Class="MediaTimestampUpdater.LogViewer"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MediaTimestampUpdater"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:dataGrid="using:Syncfusion.UI.Xaml.DataGrid"
+    mc:Ignorable="d"
+    CloseButtonText="Okay"
+    DataContext="{StaticResource LogEvents}">
+
+    <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <dataGrid:SfDataGrid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
+                             AutoGenerateColumns="False"
+                             ColumnWidthMode="Auto"
+                             AllowResizingColumns="True"
+                             ItemsSource="{Binding LogEvents}">
+            <dataGrid:SfDataGrid.Columns>
+                <dataGrid:GridDateColumn MappingName="LogEvent.Timestamp" 
+                                         HeaderText="Timestamp" 
+                                         DisplayDateFormat="MM/dd/yyyy HH:mm:ss"/>
+
+                <dataGrid:GridTextColumn MappingName="LogMessage" 
+                                         HeaderText="Message" />
+            </dataGrid:SfDataGrid.Columns>
+        </dataGrid:SfDataGrid>
+
+        <CheckBox Grid.Row="1" Grid.Column="0" 
+                  HorizontalAlignment="Left"
+                  IsChecked="{Binding HideInformationalEvents, Mode=TwoWay}">
+            Hide informational events
+        </CheckBox>
+
+        <Button Grid.Row="1" Grid.Column="2" 
+                HorizontalAlignment="Right"
+                Command="{Binding ClearLog}">
+            Clear Log
+        </Button>
+
+    </Grid>
+
+</ContentDialog>

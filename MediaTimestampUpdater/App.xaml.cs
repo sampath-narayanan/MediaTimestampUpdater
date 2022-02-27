@@ -8,7 +8,6 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -18,14 +17,12 @@ using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Autofac;
-using J4JSoftware.Configuration.CommandLine;
 using J4JSoftware.DependencyInjection;
 using J4JSoftware.ExifTSUpdater;
 using J4JSoftware.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging.Abstractions;
 using Serilog;
 using Path = System.IO.Path;
 
@@ -39,9 +36,9 @@ namespace MediaTimestampUpdater
     /// </summary>
     public partial class App : Application
     {
-        public new static App Current => (App) Application.Current;
+        public new static App Current => (App)Application.Current;
 
-        private Window? _mainWindow;
+        public Window? MainWindow { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -54,7 +51,7 @@ namespace MediaTimestampUpdater
             //Register Syncfusion license
             Syncfusion.Licensing
                       .SyncfusionLicenseProvider
-                      .RegisterLicense( "NTg2NTM0QDMxMzkyZTM0MmUzMGpmNUlrRmd6WXdHenpRd0thSTZDeDA4SW0xV1NJZGJuRUZNWDhWVnR0YkE9" );
+                      .RegisterLicense("NTg2NTM0QDMxMzkyZTM0MmUzMGpmNUlrRmd6WXdHenpRd0thSTZDeDA4SW0xV1NJZGJuRUZNWDhWVnR0YkE9");
 
             var hostConfig = new J4JHostConfiguration()
                              .Publisher("J4JSoftware")
@@ -69,18 +66,12 @@ namespace MediaTimestampUpdater
                 throw new ApplicationException($"Missing J4JHostConfiguration items: {hostConfig.MissingRequirements}");
 
             Host = hostConfig.Build()
-                   ?? throw new NullReferenceException( $"Failed to build {nameof( IJ4JHost )}" );
+                   ?? throw new NullReferenceException($"Failed to build {nameof(IJ4JHost)}");
 
             var logger = Host.Services.GetRequiredService<IJ4JLogger>();
-            //logger.LogEvent += RecordLogEvent;
 
-            logger.OutputCache( hostConfig.Logger );
+            logger.OutputCache(hostConfig.Logger);
         }
-
-        //private void RecordLogEvent( object? sender, NetEventArgs e )
-        //{
-        //    LogEvents.Add( e );
-        //}
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -89,12 +80,11 @@ namespace MediaTimestampUpdater
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _mainWindow = new MainWindow();
-            _mainWindow.Activate();
+            MainWindow = new MainWindow();
+            MainWindow.Activate();
         }
 
         public IJ4JHost Host { get; }
-        //public ObservableCollection<NetEventArgs> LogEvents { get; } = new();
 
         private static void InitializeLogger(IConfiguration config, J4JLoggerConfiguration loggerConfig)
         {
