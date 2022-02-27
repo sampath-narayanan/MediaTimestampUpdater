@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MediaTimestampUpdater (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MediaTimestampUpdater (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

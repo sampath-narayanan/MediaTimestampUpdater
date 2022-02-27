@@ -1,0 +1,99 @@
+﻿<Window
+    x:Class="MediaTimestampUpdater.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MediaTimestampUpdater"
+    xmlns:sfdg="using:Syncfusion.UI.Xaml.DataGrid"
+    xmlns:sf="using:Syncfusion.UI.Xaml.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <StackPanel DataContext="{x:Bind ViewModel}"
+                Width="Auto"
+                Height="Auto"
+                Orientation="Vertical">
+        <StackPanel.Resources>
+            <CollectionViewSource x:Name="FileCvs" Source="{x:Bind ViewModel.FileInfo}"/>
+            <sf:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <sf:BoolNegationConverter x:Key="BoolNegationConverter"/>
+        </StackPanel.Resources>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0">
+                Folder to Process
+            </TextBlock>
+
+            <Border Grid.Row="0" Grid.Column="1" 
+                    BorderThickness="0,0,0,1"
+                    BorderBrush="DarkGray">
+                <TextBlock x:Name="FolderPathTbx" Text="{Binding FolderPath}"
+                           MinWidth="200"/>
+            </Border>
+
+            <Button Grid.Row="0" Grid.Column="2" 
+                    Command="{Binding PickFolderCommand}">
+                ...
+            </Button>
+
+            <StackPanel Grid.Row="1" Grid.Column="1" 
+                        Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding ScanSubfolders}"/>
+                <TextBlock Margin="0,5,5,5">
+                    Scan subfolders
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+
+        <sfdg:SfDataGrid Height="300"
+                       AutoGenerateColumns="True"
+                       AutoGenerateColumnsMode="ResetAll"
+                       ColumnWidthMode="Auto"
+                       AllowResizingColumns="True"
+                       ItemsSource="{Binding FileInfo}">
+        </sfdg:SfDataGrid>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Button Grid.Row="0" Grid.Column="0" >
+                Adjust
+            </Button>
+
+            <Button Grid.Row="0" Grid.Column="1">
+                View Log
+            </Button>
+
+            <ProgressBar Grid.Row="0" Grid.Column="2" 
+                         Visibility="{Binding ProgressBarVisibility}"
+                         IsIndeterminate="{Binding ProgressBarIsIndeterminate}"
+                         Value="{Binding CurrentFileAdjusted}"
+                         Maximum="{Binding NumFilesToAdjust}"/>
+
+        </Grid>
+
+        <StackPanel Orientation="Horizontal">
+
+        </StackPanel>
+
+    </StackPanel>
+</Window>
