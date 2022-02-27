@@ -47,13 +47,10 @@
                 ...
             </Button>
 
-            <StackPanel Grid.Row="1" Grid.Column="1" 
-                        Orientation="Horizontal">
-                <CheckBox IsChecked="{Binding ScanSubfolders}"/>
-                <TextBlock Margin="0,5,5,5">
-                    Scan subfolders
-                </TextBlock>
-            </StackPanel>
+            <CheckBox Grid.Row="1" Grid.Column="1" 
+                      IsChecked="{Binding ScanSubfolders, Mode=TwoWay}">
+                Scan subfolders
+            </CheckBox>
         </Grid>
 
         <sfdg:SfDataGrid Height="300"

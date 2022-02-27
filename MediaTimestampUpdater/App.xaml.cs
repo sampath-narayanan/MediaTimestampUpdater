@@ -24,6 +24,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
 using Path = System.IO.Path;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -89,8 +90,8 @@ namespace MediaTimestampUpdater
         private static void InitializeLogger(IConfiguration config, J4JLoggerConfiguration loggerConfig)
         {
             loggerConfig.SerilogConfiguration
-                        .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "log.txt"),
-                                      rollingInterval: RollingInterval.Day);
+                        .WriteTo.File( Path.Combine( Directory.GetCurrentDirectory(), "log.txt" ),
+                                      rollingInterval: RollingInterval.Day );
         }
 
         private static void SetupDependencyInjection(HostBuilderContext hbc, ContainerBuilder builder)

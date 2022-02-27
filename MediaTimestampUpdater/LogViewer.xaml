@@ -38,11 +38,20 @@
             </dataGrid:SfDataGrid.Columns>
         </dataGrid:SfDataGrid>
 
-        <CheckBox Grid.Row="1" Grid.Column="0" 
+        <StackPanel Grid.Row="1" Grid.Column="0"
+                    Orientation="Horizontal">
+            <TextBlock Text="Minimum level"/>
+
+            <ComboBox ItemsSource="{Binding LogEventLevels}"
+                      SelectedItem="{Binding MinimumLogEventLevelToDisplay, Mode=TwoWay}">
+            </ComboBox>
+
+        </StackPanel>
+        <!--<CheckBox Grid.Row="1" Grid.Column="0" 
                   HorizontalAlignment="Left"
                   IsChecked="{Binding HideInformationalEvents, Mode=TwoWay}">
             Hide informational events
-        </CheckBox>
+        </CheckBox>-->
 
         <Button Grid.Row="1" Grid.Column="2" 
                 HorizontalAlignment="Right"

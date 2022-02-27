@@ -18,6 +18,7 @@ namespace MediaTimestampUpdater
         private readonly List<NetEventArgs> _logEvents = new();
 
         private bool _hideInformationalEvents;
+        private LogEventLevel _minLogEventLevel = LogEventLevel.Information;
 
         public LogViewModel()
         {
@@ -34,7 +35,7 @@ namespace MediaTimestampUpdater
         }
 
         public IEnumerable<NetEventArgs> LogEvents =>
-            _logEvents.Where( x => !_hideInformationalEvents || x.LogEvent.Level > LogEventLevel.Information );
+            _logEvents.Where( x => x.LogEvent.Level >= _minLogEventLevel );
 
         public RelayCommand ClearLog { get; }
 
@@ -42,6 +43,27 @@ namespace MediaTimestampUpdater
         {
             _logEvents.Clear();
             OnPropertyChanged( nameof( LogEvents ) );
+        }
+
+        public List<LogEventLevel> LogEventLevels { get; } = new()
+                                                             {
+                                                                 LogEventLevel.Verbose,
+                                                                 LogEventLevel.Debug,
+                                                                 LogEventLevel.Information,
+                                                                 LogEventLevel.Warning,
+                                                                 LogEventLevel.Error,
+                                                                 LogEventLevel.Fatal
+                                                             };
+
+        public LogEventLevel MinimumLogEventLevelToDisplay
+        {
+            get => _minLogEventLevel;
+
+            set
+            {
+                SetProperty( ref _minLogEventLevel, value );
+                OnPropertyChanged( nameof( LogEvents ) );
+            }
         }
 
         public bool HideInformationalEvents

@@ -41,7 +41,7 @@ namespace MediaTimestampUpdater
             var appWindow = AppWindow.GetFromWindowId(windowId);
 
             var winSize = appWindow.Size;
-            winSize.Height = winSize.Height > 700 ? 700 : winSize.Height;
+            winSize.Height = winSize.Height > 720 ? 720 : winSize.Height;
             winSize.Width = winSize.Width > 1000 ? 1000 : winSize.Width;
 
             appWindow.Resize(winSize);
