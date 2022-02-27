@@ -11,9 +11,10 @@ public class SingleDateTimeTagExtractor<T> : TimestampExtractor<T>
         string dtTagName,
         string dtFormat,
         Type? priorExtractor,
-        IJ4JLogger logger
+        IJ4JLogger logger,
+        params string[] supportedExtensions
     )
-        : base( dtFormat, logger )
+        : base( dtFormat, logger, supportedExtensions )
     {
         _dtTagName = dtTagName;
     }

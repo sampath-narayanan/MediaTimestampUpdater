@@ -10,7 +10,12 @@ public class QuickTimeMovieHeaderExtractor : SingleDateTimeTagExtractor<QuickTim
     public QuickTimeMovieHeaderExtractor(
         IJ4JLogger logger
     )
-        : base("Date/Time Original", "MMM dd HH:mm:ss yyyy", typeof(ExIfSubIfdExtractor), logger)
+        : base( "Date/Time Original",
+               "MMM dd HH:mm:ss yyyy",
+               typeof( ExIfSubIfdExtractor ),
+               logger,
+               "mov",
+               "mp4" )
     {
     }
 

@@ -2,5 +2,6 @@
 
 public interface ITimestampExtractors
 {
+    IReadOnlyCollection<string> SupportedExtensions { get; }
     void GetTimestamp( FileChangeInfo changeInfo );
 }

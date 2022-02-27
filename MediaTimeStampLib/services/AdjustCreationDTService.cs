@@ -16,17 +16,17 @@ namespace J4JSoftware.ExifTSUpdater
 {
     public class AdjustCreationDTService : IHostedService
     {
-        private readonly IAppConfig _appConfig;
+        private readonly IExtractionConfig _config;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly IJ4JLogger _logger;
 
         public AdjustCreationDTService(
-            IAppConfig appConfig,
+            IExtractionConfig config,
             IHostApplicationLifetime lifetime,
             IJ4JLogger logger
         )
         {
-            _appConfig = appConfig;
+            _config = config;
             _lifetime = lifetime;
 
             _logger = logger;
@@ -35,23 +35,15 @@ namespace J4JSoftware.ExifTSUpdater
 
         public Task StartAsync( CancellationToken cancellationToken )
         {
-            lock( _appConfig )
+            lock( _config )
             {
-                if( _appConfig.SkipChanges )
-                {
-                    Console.WriteLine("\nSkipping adjusting file creation timestamps");
-
-                    _lifetime.StopApplication();
-                    return Task.CompletedTask;
-                }
-
                 Console.WriteLine("\nAdjusting file creation timestamps...\n");
 
                 var skipped = 0;
 
-                for (var idx = 0; idx < _appConfig.Changes.Count; idx++)
+                for (var idx = 0; idx < _config.Changes.Count; idx++)
                 {
-                    var curChange = _appConfig.Changes[ idx ];
+                    var curChange = _config.Changes[ idx ];
 
                     if( curChange.ScanStatus != ScanStatus.Valid )
                         skipped++;

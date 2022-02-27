@@ -18,12 +18,13 @@ namespace J4JSoftware.ExifTSUpdater
     {
         private static J4JHostConfiguration _hostConfig;
         private static IJ4JHost? _host;
+        private static J4JCachedLogger? _buildLogger;
 
         static Program()
         {
             _hostConfig = new J4JHostConfiguration()
                           .Publisher("J4JSoftware")
-                          .ApplicationName("ExifTSUpdater")
+                          .ApplicationName("MediaTimestampUpdater")
                           .LoggerInitializer(InitializeLogger)
                           .AddDependencyInjectionInitializers(SetupDependencyInjection)
                           .AddServicesInitializers(InitializeServices)
@@ -41,6 +42,8 @@ namespace J4JSoftware.ExifTSUpdater
                 ReportLaunchFailure($"Missing J4JHostConfiguration items: {_hostConfig.MissingRequirements}" );
                 return;
             }
+
+            _buildLogger = _hostConfig.Logger;
 
             _host = _hostConfig.Build();
             if( _host == null )
@@ -71,6 +74,9 @@ namespace J4JSoftware.ExifTSUpdater
                 return;
             }
 
+            var logger = _host.Services.GetRequiredService<IJ4JLogger>();
+            logger?.OutputCache( _buildLogger );
+
             _host.Run();
         }
 
@@ -100,7 +106,7 @@ namespace J4JSoftware.ExifTSUpdater
             builder.Register( c =>
                               {
                                   var config = c.Resolve<IConfiguration>();
-                                  return config.Get<AppConfig>();
+                                  return config.Get<ExtractionConfig>();
                               } )
                    .AsImplementedInterfaces()
                    .SingleInstance();
@@ -109,7 +115,7 @@ namespace J4JSoftware.ExifTSUpdater
                             .AddTests( PredefinedTypeTests.OnlyJ4JLoggerRequired )
                             .AddTests( PredefinedTypeTests.NonAbstract );
 
-            builder.RegisterTypeAssemblies<Program>( typeTests );
+            builder.RegisterTypeAssemblies<FileChangeInfo>( typeTests );
 
             builder.RegisterType<TimestampExtractors>()
                    .As<ITimestampExtractors>()
@@ -119,21 +125,29 @@ namespace J4JSoftware.ExifTSUpdater
         private static void InitializeServices( HostBuilderContext hbc, IServiceCollection services )
         {
             services.AddHostedService<ScanFilesService>();
+
+            var appConfig = hbc.Configuration.Get<AppConfig>();
+            if( appConfig.SkipChanges )
+            {
+                _buildLogger?.Warning("File creation dates will not be modified");
+                return;
+            }
+
             services.AddHostedService<AdjustCreationDTService>();
         }
 
         private static void SetupOptions(OptionCollection options)
         {
-            options.Bind<AppConfig, List<string>>(x => x.Extensions, "x")!
-                   .SetDefaultValue( AppConfig.DefaultExtensions.ToList())
-                   .SetDescription("media extensions to process");
-
             options.Bind<AppConfig, InfoToReport>( x => x.InfoToReport, "r" )!
                    .SetDescription( "information to report from file scanning (multiple flag values allowed)" );
 
             options.Bind<AppConfig, string>(x => x.MediaDirectory, "d")!
                    .SetDefaultValue(Directory.GetCurrentDirectory())
                    .SetDescription("media directory to process");
+
+            options.Bind<AppConfig, bool>(x => x.ScanSubfolders, "c")!
+                   .SetDefaultValue(true)
+                   .SetDescription("scan subfolders of media directory");
 
             options.Bind<AppConfig, bool>( x => x.SkipChanges, "s" )!
                    .SetDefaultValue( false )

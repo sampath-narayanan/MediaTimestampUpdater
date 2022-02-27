@@ -5,6 +5,7 @@ namespace J4JSoftware.ExifTSUpdater;
 public interface ITimestampExtractor : IEquatable<ITimestampExtractor>
 {
     Type MdeDirectoryType { get; }
+    IReadOnlyCollection<string> SupportedExtensions { get; }
 
     ScanInfo GetDateTime( IReadOnlyList<MetadataExtractor.Directory> directories );
 }

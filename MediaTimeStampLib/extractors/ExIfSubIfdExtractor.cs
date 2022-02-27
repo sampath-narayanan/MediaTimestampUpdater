@@ -10,7 +10,12 @@ public class ExIfSubIfdExtractor : SingleDateTimeTagExtractor<ExifSubIfdDirector
     public ExIfSubIfdExtractor( 
         IJ4JLogger logger 
     )
-        : base("Date/Time Original", "yyyy:MM:dd HH:mm:ss", null, logger )
+        : base(
+               "Date/Time Original", 
+               "yyyy:MM:dd HH:mm:ss", 
+               null, 
+               logger,
+               "jpg", "jpeg", "mov", "mp4", "heic")
     {
     }
 }

@@ -12,17 +12,18 @@ namespace J4JSoftware.ExifTSUpdater
 {
     public class TimestampExtractors : ITimestampExtractors
     {
-        private readonly IAppConfig _appConfig;
+        private readonly IExtractionConfig _extractionConfig;
         private readonly List<ITimestampExtractor> _tsExtractors;
+        private readonly List<string> _supportedExtensions;
         private readonly IJ4JLogger _logger;
 
         public TimestampExtractors(
-            IAppConfig appConfig,
+            IExtractionConfig extractionConfig,
             IEnumerable<ITimestampExtractor> tsExtractors,
             IJ4JLogger logger
         )
         {
-            _appConfig = appConfig;
+            _extractionConfig = extractionConfig;
 
             var topoList = tsExtractors.ToNodeList( logger: logger );
 
@@ -31,18 +32,27 @@ namespace J4JSoftware.ExifTSUpdater
                     ArgumentException( $"Failed to sort list of timestamp extractors. Check their PredecessorAttributes." );
 
             _tsExtractors = sorted!;
+            _supportedExtensions = _tsExtractors.SelectMany( x => x.SupportedExtensions )
+                                                .Distinct()
+                                                .ToList();
 
             _logger = logger;
             _logger.SetLoggedType( GetType() );
         }
+
+        public IReadOnlyCollection<string> SupportedExtensions => _supportedExtensions;
 
         public void GetTimestamp( FileChangeInfo changeInfo )
         {
             var mdDirectories = MDE.ImageMetadataReader.ReadMetadata(changeInfo.FilePath);
 
             changeInfo.ScanStatus = ScanStatus.NotScanned;
+            var fileExt = Path.GetExtension( changeInfo.FilePath );
 
-            foreach (var tsExtractor in _tsExtractors)
+            foreach( var tsExtractor in _tsExtractors
+                        .Where( x => x.SupportedExtensions
+                                      .Any( y => y.Equals( fileExt, StringComparison.OrdinalIgnoreCase ) ) )
+                   )
             {
                 var scanInfo = tsExtractor.GetDateTime( mdDirectories );
 
@@ -57,7 +67,7 @@ namespace J4JSoftware.ExifTSUpdater
                 break;
             }
 
-            if (_appConfig.ReportTags)
+            if (_extractionConfig.ReportTags)
                 StoreMetadataTags(changeInfo, mdDirectories);
         }
 

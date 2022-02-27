@@ -17,7 +17,7 @@ namespace J4JSoftware.ExifTSUpdater
 {
     public class ScanFilesService : IHostedService
     {
-        private readonly IAppConfig _appConfig;
+        private readonly IExtractionConfig _config;
         private readonly ITimestampExtractors _tsExtractors;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly List<FileChangeInfo> _changes = new();
@@ -25,13 +25,13 @@ namespace J4JSoftware.ExifTSUpdater
         private readonly IJ4JLogger _logger;
 
         public ScanFilesService(
-            IAppConfig appConfig,
+            IExtractionConfig config,
             ITimestampExtractors tsExtractors,
             IHostApplicationLifetime lifetime,
             IJ4JLogger logger
         )
         {
-            _appConfig = appConfig;
+            _config = config;
             _tsExtractors = tsExtractors;
             _lifetime = lifetime;
 
@@ -48,15 +48,15 @@ namespace J4JSoftware.ExifTSUpdater
         {
             _changes.Clear();
 
-            _appConfig.Extensions
-                      .ForEach( x =>
-                                {
-                                    var fileExt = x[ 0 ] == '.' ? $"*{x}" : $"*.{x}";
-
-                                    _changes.AddRange( Directory.EnumerateFiles( _appConfig.MediaDirectory,
-                                                                                fileExt )
-                                                                .Select( f => new FileChangeInfo( f ) ) );
-                                } );
+            foreach( var fileExt in _tsExtractors.SupportedExtensions )
+            {
+                _changes.AddRange( Directory.EnumerateFiles( _config.MediaDirectory,
+                                                            $"*{fileExt}",
+                                                            _config.ScanSubfolders
+                                                                ? SearchOption.AllDirectories
+                                                                : SearchOption.TopDirectoryOnly )
+                                            .Select( f => new FileChangeInfo( f ) ) );
+            }
 
             for( var idx = 0; idx < _changes.Count; idx++ )
             {
@@ -72,8 +72,8 @@ namespace J4JSoftware.ExifTSUpdater
                 Console.Write( $"Scanned {( idx + 1 ):n0} of {_changes.Count:n0} files\r" );
             }
 
-            _appConfig.Changes.Clear();
-            _appConfig.Changes.AddRange( _changes );
+            _config.Changes.Clear();
+            _config.Changes.AddRange( _changes );
 
             Console.WriteLine( $"\n\n{_changes.Count:n0} files scanned" );
 
@@ -112,10 +112,10 @@ namespace J4JSoftware.ExifTSUpdater
 
         private async Task OutputJsonFile( CancellationToken cancellationToken )
         {
-            if( !_appConfig.ReportChanges )
+            if( !_config.ReportChanges )
                 return;
 
-            var toReport = _appConfig.InfoToReport switch
+            var toReport = _config.InfoToReport switch
                            {
                                InfoToReport.AllTimestamps => _changes,
                                InfoToReport.InvalidTimestamps =>

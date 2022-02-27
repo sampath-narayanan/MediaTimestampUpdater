@@ -12,7 +12,12 @@ public class FileMetadataExtractor : SingleDateTimeTagExtractor<FileMetadataDire
     public FileMetadataExtractor(
         IJ4JLogger logger
     )
-        : base( "File Modified Date", "MMM dd HH:mm:ss zzzz yyyy", typeof( QuickTimeMovieHeaderExtractor ), logger )
+        : base( 
+               "File Modified Date", 
+               "MMM dd HH:mm:ss zzzz yyyy", 
+               typeof( QuickTimeMovieHeaderExtractor ), 
+               logger,
+               "jpg", "jpeg", "mov", "mp4", "heic")
     {
     }
 

@@ -15,13 +15,20 @@ namespace J4JSoftware.ExifTSUpdater
         where T : MDE.Directory
     {
         private readonly string _dtFormat;
+        private readonly List<string> _supportedExtensions;
 
         protected TimestampExtractor(
             string dateTimeFormat,
-            IJ4JLogger logger
+            IJ4JLogger logger,
+            params string[] supportedExtensions
         )
         {
             _dtFormat = dateTimeFormat;
+
+            _supportedExtensions = supportedExtensions
+                                       .Where(x=>x.Length > 0  )
+                                       .Select(x=>x[0] == '.' ? x : $".{x}")
+                                       .ToList();
 
             Logger = logger;
             Logger.SetLoggedType( GetType() );
@@ -30,6 +37,7 @@ namespace J4JSoftware.ExifTSUpdater
         protected IJ4JLogger Logger { get; }
 
         public Type MdeDirectoryType => typeof( T );
+        public IReadOnlyCollection<string> SupportedExtensions => _supportedExtensions;
 
         public ScanInfo GetDateTime( IReadOnlyList<MDE.Directory> directories )
         {
