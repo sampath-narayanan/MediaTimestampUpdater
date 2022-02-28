@@ -14,13 +14,22 @@ using MDE = MetadataExtractor;
 
 namespace J4JSoftware.ExifTSUpdater
 {
-    public class AdjustCreationDTService : IHostedService
+    public class AdjustTimestampService : IHostedService
     {
+        public record Stats( int Total, int Skipped )
+        {
+            public int Adjusted => Total - Skipped;
+        }
+
+        public event EventHandler? Started;
+        public event EventHandler? Adjusted;
+        public event EventHandler<Stats>? Completed;
+
         private readonly IExtractionConfig _config;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly IJ4JLogger _logger;
 
-        public AdjustCreationDTService(
+        public AdjustTimestampService(
             IExtractionConfig config,
             IHostApplicationLifetime lifetime,
             IJ4JLogger logger
@@ -37,7 +46,7 @@ namespace J4JSoftware.ExifTSUpdater
         {
             lock( _config )
             {
-                Console.WriteLine("\nAdjusting file creation timestamps...\n");
+                Started?.Invoke(this, EventArgs.Empty  );
 
                 var skipped = 0;
 
@@ -50,8 +59,10 @@ namespace J4JSoftware.ExifTSUpdater
                     else
                         File.SetCreationTime(curChange.FilePath, curChange.DateTaken!.Value);
 
-                    Console.Write($"Modified file creation timestamp on {(idx + 1 - skipped):n0} files, skipped {skipped:n0} files\r");
+                    Adjusted?.Invoke( this, EventArgs.Empty );
                 }
+
+                Completed?.Invoke( this, new Stats( _config.Changes.Count, skipped ) );
             }
 
             _lifetime.StopApplication();

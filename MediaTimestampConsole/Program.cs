@@ -133,7 +133,7 @@ namespace J4JSoftware.ExifTSUpdater
                 return;
             }
 
-            services.AddHostedService<AdjustCreationDTService>();
+            services.AddHostedService<AdjustTimestampService>();
         }
 
         private static void SetupOptions(OptionCollection options)
