@@ -12,7 +12,7 @@
             </ResourceDictionary.MergedDictionaries>
             <!-- Other app resources here -->
 
-            <local:LogViewModel x:Key="LogEvents"/>
+            <local:LogViewerModel x:Key="LogEvents"/>
 
         </ResourceDictionary>
 

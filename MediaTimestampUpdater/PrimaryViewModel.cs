@@ -18,11 +18,11 @@ using Microsoft.UI.Xaml;
 
 namespace MediaTimestampUpdater
 {
-    public class MainViewModel : ObservableObject
+    public class PrimaryViewModel : ObservableObject
     {
         private readonly IExtractionConfig _config;
         private readonly ScanFilesService _scanFilesService;
-        private readonly AdjustCreationDTService _adjustCreationDTService;
+        private readonly AdjustTimestampService _adjustTimestampService;
         private readonly CancellationTokenSource _tokenSource = new();
         private readonly DispatcherQueue _dqueue;
         private readonly IJ4JLogger _logger;
@@ -34,18 +34,19 @@ namespace MediaTimestampUpdater
         private bool _progBarIndeterminate = true;
         private ObservableCollection<MediaFileViewModel> _fileInfo = new();
         private int _numFilesToAdjust;
-        private int _curFileAdjusted;
+        private int _curFilesProcessed;
 
-        public MainViewModel(
+        public PrimaryViewModel(
             IExtractionConfig config,
             ScanFilesService scanFilesService,
-            AdjustCreationDTService adjustCreationDtService,
+            AdjustTimestampService adjustTimestampService,
             IJ4JLogger logger
             )
         {
             _config = config;
             _scanFilesService = scanFilesService;
-            _adjustCreationDTService = adjustCreationDtService;
+            _adjustTimestampService = adjustTimestampService;
+            _adjustTimestampService.Adjusted += Timestamp_Adjusted;
 
             _dqueue = DispatcherQueue.GetForCurrentThread();
 
@@ -56,7 +57,10 @@ namespace MediaTimestampUpdater
             AdjustTimestampsCommand = new AsyncRelayCommand( AdjustTimestampsHandler );
         }
 
-        internal IntPtr ViewHandle { get; set; }
+        private void Timestamp_Adjusted(object? sender, EventArgs e)
+        {
+            CurrentFilesProcessed++;
+        }
 
         public AsyncRelayCommand PickFolderCommand { get; }
 
@@ -68,7 +72,7 @@ namespace MediaTimestampUpdater
                                };
 
 
-            WinRT.Interop.InitializeWithWindow.Initialize( folderPicker, ViewHandle );
+            WinRT.Interop.InitializeWithWindow.Initialize( folderPicker, App.Current.MainWindowIntPtr );
 
             folderPicker.FileTypeFilter.Add("*");
 
@@ -89,6 +93,7 @@ namespace MediaTimestampUpdater
                 _config.MediaDirectory = folder.Path;
 
                 ProgressBarVisibility = Visibility.Visible;
+                ProgressBarIsIndeterminate = true;
 
                 await Task.Run( async () =>
                                 {
@@ -126,8 +131,11 @@ namespace MediaTimestampUpdater
         private async Task AdjustTimestampsHandler()
         {
             ProgressBarVisibility = Visibility.Visible;
+            ProgressBarIsIndeterminate = false;
+            NumFilesToAdjust = _config.Changes.Count;
+            CurrentFilesProcessed = 0;
 
-            await Task.Run( async () => await _adjustCreationDTService.StartAsync( _tokenSource.Token ) );
+            await Task.Run( async () => await _adjustTimestampService.StartAsync( _tokenSource.Token ) );
 
             ProgressBarVisibility = Visibility.Collapsed;
         }
@@ -168,10 +176,10 @@ namespace MediaTimestampUpdater
             set => SetProperty( ref _numFilesToAdjust, value );
         }
 
-        public int CurrentFileAdjusted
+        public int CurrentFilesProcessed
         {
-            get => _curFileAdjusted;
-            set => SetProperty( ref _curFileAdjusted, value );
+            get => _curFilesProcessed;
+            set => SetProperty( ref _curFilesProcessed, value );
         }
 
         public ObservableCollection<MediaFileViewModel> FileInfo

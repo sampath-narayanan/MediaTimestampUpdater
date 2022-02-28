@@ -1,5 +1,5 @@
-﻿<ContentDialog
-    x:Class="MediaTimestampUpdater.LogViewer"
+﻿<UserControl
+    x:Class="MediaTimestampUpdater.LogViewerControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MediaTimestampUpdater"
@@ -7,7 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:dataGrid="using:Syncfusion.UI.Xaml.DataGrid"
     mc:Ignorable="d"
-    CloseButtonText="Okay"
     DataContext="{StaticResource LogEvents}">
 
     <Grid>
@@ -23,7 +22,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <dataGrid:SfDataGrid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
+        <dataGrid:SfDataGrid x:Name="LogEventsDataGrid" 
+                             Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
+                             HorizontalAlignment="Center"
                              AutoGenerateColumns="False"
                              ColumnWidthMode="Auto"
                              AllowResizingColumns="True"
@@ -38,27 +39,29 @@
             </dataGrid:SfDataGrid.Columns>
         </dataGrid:SfDataGrid>
 
-        <StackPanel Grid.Row="1" Grid.Column="0"
-                    Orientation="Horizontal">
+        <Button Grid.Row="1" Grid.Column="0" 
+                HorizontalAlignment="Left"
+                Command="{Binding ClearLogCommand}">
+            Clear Log
+        </Button>
+
+        <StackPanel Grid.Row="1" Grid.Column="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
             <TextBlock Text="Minimum level"/>
 
             <ComboBox ItemsSource="{Binding LogEventLevels}"
-                      SelectedItem="{Binding MinimumLogEventLevelToDisplay, Mode=TwoWay}">
-            </ComboBox>
+                      SelectedItem="{Binding MinimumLogEventLevelToDisplay}"
+                      SelectionChanged="OnMinLogEventLevelChanged"/>
 
         </StackPanel>
-        <!--<CheckBox Grid.Row="1" Grid.Column="0" 
-                  HorizontalAlignment="Left"
-                  IsChecked="{Binding HideInformationalEvents, Mode=TwoWay}">
-            Hide informational events
-        </CheckBox>-->
 
-        <Button Grid.Row="1" Grid.Column="2" 
+        <Button Grid.Row="1" Grid.Column="2"
                 HorizontalAlignment="Right"
-                Command="{Binding ClearLog}">
-            Clear Log
+                Command="{Binding CloseCommand}">
+            Close Log Viewer
         </Button>
 
     </Grid>
 
-</ContentDialog>
+</UserControl>

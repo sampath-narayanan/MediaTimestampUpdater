@@ -13,36 +13,40 @@ using Serilog.Events;
 
 namespace MediaTimestampUpdater
 {
-    public class LogViewModel : ObservableObject
+    public class LogViewerModel : ObservableObject
     {
-        private readonly List<NetEventArgs> _logEvents = new();
-
-        private bool _hideInformationalEvents;
         private LogEventLevel _minLogEventLevel = LogEventLevel.Information;
 
-        public LogViewModel()
+        public LogViewerModel()
         {
             var logger = App.Current.Host.Services.GetRequiredService<IJ4JLogger>();
             logger.LogEvent += Logger_LogEvent;
 
-            ClearLog = new RelayCommand( ClearLogHandler );
+            ClearLogCommand = new RelayCommand( ClearLogHandler );
+            CloseCommand = new RelayCommand( CloseHandler );
         }
 
         private void Logger_LogEvent( object? sender, NetEventArgs e )
         {
-            _logEvents.Add( e );
-            OnPropertyChanged( nameof( LogEvents ) );
+            LogEvents.Add( e );
         }
 
-        public IEnumerable<NetEventArgs> LogEvents =>
-            _logEvents.Where( x => x.LogEvent.Level >= _minLogEventLevel );
+        public ObservableCollection<NetEventArgs> LogEvents { get; } = new();
 
-        public RelayCommand ClearLog { get; }
+        public RelayCommand ClearLogCommand { get; }
 
         private void ClearLogHandler()
         {
-            _logEvents.Clear();
+            LogEvents.Clear();
             OnPropertyChanged( nameof( LogEvents ) );
+        }
+
+        public RelayCommand CloseCommand { get; }
+
+        private void CloseHandler()
+        {
+            var prevControl = App.Current.CachedElements.Pop();
+            App.Current.MainWindow!.Content = prevControl;
         }
 
         public List<LogEventLevel> LogEventLevels { get; } = new()
@@ -66,15 +70,11 @@ namespace MediaTimestampUpdater
             }
         }
 
-        public bool HideInformationalEvents
+        public bool FilterLogEvents( object item )
         {
-            get => _hideInformationalEvents;
+            var logEvent = item as NetEventArgs;
 
-            set
-            {
-                SetProperty( ref _hideInformationalEvents, value );
-                OnPropertyChanged( nameof( LogEvents ) );
-            }
+            return logEvent?.LogEvent.Level >= MinimumLogEventLevelToDisplay;
         }
     }
 }

@@ -12,20 +12,30 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Microsoft.Extensions.DependencyInjection;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace MediaTimestampUpdater
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class LogViewer : ContentDialog
+    public sealed partial class PrimaryControl : UserControl
     {
-        public LogViewer()
+        public PrimaryControl()
         {
             this.InitializeComponent();
+            
+            ViewModel = App.Current.Host.Services.GetRequiredService<PrimaryViewModel>();
+        }
+
+        internal PrimaryViewModel ViewModel { get; }
+
+        private void ShowLog_Click(object sender, RoutedEventArgs e)
+        {
+            App.Current.CachedElements.Push(App.Current.MainWindow!.Content);
+
+            App.Current.MainWindow!.Content = new LogViewerControl();
+            App.Current.MainWindow!.Activate();
         }
     }
 }
