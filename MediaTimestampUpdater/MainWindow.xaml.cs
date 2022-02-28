@@ -32,31 +32,6 @@ namespace MediaTimestampUpdater
             this.InitializeComponent();
 
             Title = "Media Timestamp Updater";
-            ViewModel = App.Current.Host.Services.GetRequiredService<MainViewModel>();
-
-            ViewModel.ViewHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-
-            // adjust initial window size
-            var windowId = Win32Interop.GetWindowIdFromWindow(ViewModel.ViewHandle);
-            var appWindow = AppWindow.GetFromWindowId(windowId);
-
-            var winSize = appWindow.Size;
-            winSize.Height = winSize.Height > 720 ? 720 : winSize.Height;
-            winSize.Width = winSize.Width > 1000 ? 1000 : winSize.Width;
-
-            appWindow.Resize(winSize);
-        }
-
-        internal MainViewModel ViewModel { get; }
-
-        private async void ShowLog_Click( object sender, RoutedEventArgs e )
-        {
-            var dlg = new LogViewer
-                      {
-                          XamlRoot = App.Current.MainWindow!.Content.XamlRoot
-                      };
-
-            await dlg.ShowAsync();
         }
     }
 }

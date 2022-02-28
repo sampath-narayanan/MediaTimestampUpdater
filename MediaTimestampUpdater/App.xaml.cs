@@ -23,6 +23,8 @@ using J4JSoftware.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
 using Serilog;
 using Serilog.Events;
 using Path = System.IO.Path;
@@ -40,6 +42,10 @@ namespace MediaTimestampUpdater
         public new static App Current => (App)Application.Current;
 
         public Window? MainWindow { get; private set; }
+        public IntPtr MainWindowIntPtr { get; private set; }
+        public WindowId MainWindowId { get; private set; }
+
+        public Stack<UIElement> CachedElements { get; } = new();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -81,8 +87,21 @@ namespace MediaTimestampUpdater
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            MainWindow = new MainWindow();
+            MainWindow = new MainWindow() { Title = "Media Timestamp Updater" };
             MainWindow.Activate();
+
+            MainWindowIntPtr = WinRT.Interop.WindowNative.GetWindowHandle( MainWindow );
+            MainWindowId = Win32Interop.GetWindowIdFromWindow( MainWindowIntPtr );
+
+            var appWindow = AppWindow.GetFromWindowId( MainWindowId );
+
+            var winSize = appWindow.Size;
+            winSize.Height = winSize.Height > 720 ? 720 : winSize.Height;
+            winSize.Width = winSize.Width > 1000 ? 1000 : winSize.Width;
+
+            appWindow.Resize(winSize);
+
+            MainWindow.Content = new PrimaryControl();
         }
 
         public IJ4JHost Host { get; }
@@ -110,7 +129,7 @@ namespace MediaTimestampUpdater
                    .As<ITimestampExtractors>()
                    .SingleInstance();
 
-            builder.RegisterType<MainViewModel>()
+            builder.RegisterType<PrimaryViewModel>()
                    .AsSelf()
                    .SingleInstance();
 
@@ -118,7 +137,7 @@ namespace MediaTimestampUpdater
                    .AsSelf()
                    .SingleInstance();
 
-            builder.RegisterType<AdjustCreationDTService>()
+            builder.RegisterType<AdjustTimestampService>()
                    .AsSelf()
                    .SingleInstance();
         }
@@ -126,7 +145,7 @@ namespace MediaTimestampUpdater
         private void InitializeServices(HostBuilderContext hbc, IServiceCollection services)
         {
             services.AddHostedService<ScanFilesService>();
-            services.AddHostedService<AdjustCreationDTService>();
+            services.AddHostedService<AdjustTimestampService>();
         }
 
         // these next two methods serve to strip the project path off of source code

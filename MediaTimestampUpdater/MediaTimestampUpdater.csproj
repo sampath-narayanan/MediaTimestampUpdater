@@ -14,7 +14,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="DefaultResources.xaml" />
-    <None Remove="LogViewer.xaml" />
+    <None Remove="LogViewerControl.xaml" />
+    <None Remove="PrimaryControl.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,7 +48,12 @@
     <ProjectReference Include="..\MediaTimeStampLib\MediaTimeStampLib.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="LogViewer.xaml">
+    <Page Update="PrimaryControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="LogViewerControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
