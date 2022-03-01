@@ -10,24 +10,31 @@ namespace J4JSoftware.ExifTSUpdater
     {
         private string _filePath = string.Empty;
 
+        public bool FileExists { get; private set; }
+
         public string FilePath
         {
             get => _filePath;
 
             set
             {
-                if( !File.Exists( value ) )
-                    return;
+                FileExists = File.Exists( value );
 
                 _filePath = value;
-                DateCreated = File.GetCreationTime(FilePath);
+
+                DateCreated = FileExists ? DateCreated = File.GetCreationTime( FilePath ) : null;
             }
         }
 
-        public DateTime DateCreated { get; set; }
+        public DateTime? DateCreated { get; set; }
         public DateTime? DateTaken { get; set; }
         public ScanStatus ScanStatus { get; set; } = ScanStatus.NotScanned;
         public string? ExtractorName { get; set; }
         public List<TagInfo> Tags { get; } = new();
+
+        public void DoAction( Action<IFileChangeInfo> action )
+        {
+            action( this );
+        }
     }
 }
