@@ -13,6 +13,7 @@
             <!-- Other app resources here -->
 
             <local:LogViewerModel x:Key="LogEvents"/>
+            <local:SharedFileInfo x:Key="SharedFileInfo"/>
 
         </ResourceDictionary>
 

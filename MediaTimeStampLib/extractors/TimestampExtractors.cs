@@ -47,11 +47,11 @@ namespace J4JSoftware.ExifTSUpdater
 
         public IReadOnlyCollection<string> SupportedExtensions => _supportedExtensions;
 
-        public void GetTimestamp( FileChangeInfo changeInfo )
+        public void GetTimestamp( IFileChangeInfo changeInfo )
         {
             var mdDirectories = MDE.ImageMetadataReader.ReadMetadata(changeInfo.FilePath);
 
-            changeInfo.ScanStatus = ScanStatus.NotScanned;
+            changeInfo.DoAction( x => x.ScanStatus = ScanStatus.NotScanned );
             var fileExt = Path.GetExtension( changeInfo.FilePath );
 
             foreach( var tsExtractor in _tsExtractors
@@ -62,13 +62,13 @@ namespace J4JSoftware.ExifTSUpdater
                 var scanInfo = tsExtractor.GetDateTime( mdDirectories );
 
                 if( scanInfo.ScanResult > changeInfo.ScanStatus )
-                    changeInfo.ScanStatus = scanInfo.ScanResult;
+                    changeInfo.DoAction( x => x.ScanStatus = scanInfo.ScanResult );
 
                 if( ( scanInfo.ScanResult & ScanStatus.Valid ) != ScanStatus.Valid )
                     continue;
 
-                changeInfo.DateTaken = scanInfo.Timestamp;
-                changeInfo.ExtractorName = scanInfo.ExtractorName;
+                changeInfo.DoAction( x => x.DateTaken = scanInfo.Timestamp );
+                changeInfo.DoAction( x => x.ExtractorName = scanInfo.ExtractorName );
                 break;
             }
 
@@ -76,20 +76,21 @@ namespace J4JSoftware.ExifTSUpdater
                 StoreMetadataTags(changeInfo, mdDirectories);
         }
 
-        private void StoreMetadataTags(FileChangeInfo changeInfo, IReadOnlyList<MDE.Directory> directories)
+        private static void StoreMetadataTags(IFileChangeInfo changeInfo, IReadOnlyList<MDE.Directory> directories)
         {
-            foreach( var tag in directories.SelectMany( x => x.Tags )
-                                           .Where( x => x.Name.IndexOf( "date", StringComparison.OrdinalIgnoreCase )
-                                                        >= 0 ) )
+            foreach( var tag in directories
+                               .SelectMany( x => x.Tags )
+                               .Where( x => x.Name.Contains( "date", StringComparison.OrdinalIgnoreCase ) ) )
             {
                 var tagInfo = changeInfo.Tags
-                                        .FirstOrDefault( x => x.DirectoryName.Equals( tag.DirectoryName,
-                                                                            StringComparison.OrdinalIgnoreCase )
-                                                     && x.TagName.Equals( tag.Name,
-                                                                         StringComparison.OrdinalIgnoreCase ) );
+                                        .FirstOrDefault( x => x.DirectoryName
+                                                               .Equals( tag.DirectoryName,
+                                                                        StringComparison.OrdinalIgnoreCase )
+                                                          && x.TagName
+                                                              .Equals( tag.Name, StringComparison.OrdinalIgnoreCase ) );
 
                 if( tagInfo == null )
-                    changeInfo.Tags.Add( new TagInfo( tag ) );
+                    changeInfo.DoAction( x => x.Tags.Add( new TagInfo( tag ) ) );
             }
         }
     }

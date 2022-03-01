@@ -20,17 +20,16 @@ namespace J4JSoftware.ExifTSUpdater
     {
         public AdjustTimestampService(
             IExtractionConfig config,
-            ICollection<T> fileChanges,
             IHostApplicationLifetime lifetime,
             IJ4JLogger logger
         )
-        :base( config, fileChanges, lifetime, logger )
+        :base( config, lifetime, logger )
         {
         }
 
         protected override Task Process( CancellationToken token )
         {
-            foreach( var fileChange in FileChanges )
+            foreach( var fileChange in FileChanges! )
             {
                 if (fileChange.ScanStatus != ScanStatus.Valid)
                     Skipped++;

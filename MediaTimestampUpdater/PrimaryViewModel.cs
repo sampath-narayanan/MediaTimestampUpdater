@@ -15,19 +15,19 @@ using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Data;
 
 namespace MediaTimestampUpdater
 {
     public class PrimaryViewModel : ObservableObject
     {
         private readonly IExtractionConfig _config;
-        private readonly ScanFilesService _scanFilesService;
-        private readonly AdjustTimestampService _adjustTimestampService;
+        private readonly ScanFilesService<MediaFileViewModel> _scanFilesService;
+        private readonly AdjustTimestampService<MediaFileViewModel> _adjustTimestampService;
         private readonly CancellationTokenSource _tokenSource = new();
-        private readonly DispatcherQueue _dqueue;
         private readonly IJ4JLogger _logger;
 
-        private string? _folderPath;
+        private string _folderPath = String.Empty;
         private bool _scanSubfolders;
         private bool _scanCompleted;
         private Visibility _progressBarVisibility = Visibility.Collapsed;
@@ -38,17 +38,21 @@ namespace MediaTimestampUpdater
 
         public PrimaryViewModel(
             IExtractionConfig config,
-            ScanFilesService scanFilesService,
-            AdjustTimestampService adjustTimestampService,
+            ScanFilesService<MediaFileViewModel> scanFilesService,
+            AdjustTimestampService<MediaFileViewModel> adjustTimestampService,
             IJ4JLogger logger
             )
         {
             _config = config;
-            _scanFilesService = scanFilesService;
-            _adjustTimestampService = adjustTimestampService;
-            _adjustTimestampService.Adjusted += Timestamp_Adjusted;
 
-            _dqueue = DispatcherQueue.GetForCurrentThread();
+            var sharedInfo = App.Current.Resources[ "SharedFileInfo" ] as SharedFileInfo;
+
+            _scanFilesService = scanFilesService;
+            _scanFilesService.FileChanges = sharedInfo;
+
+            _adjustTimestampService = adjustTimestampService;
+            _adjustTimestampService.FileChanges = sharedInfo;
+            _adjustTimestampService.FileProcessed += Timestamp_FileProcessed;
 
             _logger = logger;
             _logger.SetLoggedType( GetType() );
@@ -57,7 +61,7 @@ namespace MediaTimestampUpdater
             AdjustTimestampsCommand = new AsyncRelayCommand( AdjustTimestampsHandler );
         }
 
-        private void Timestamp_Adjusted(object? sender, EventArgs e)
+        private void Timestamp_FileProcessed(object? sender, string filePath )
         {
             CurrentFilesProcessed++;
         }
@@ -97,33 +101,19 @@ namespace MediaTimestampUpdater
 
                 await Task.Run( async () =>
                                 {
-                                    var temp = await ScanFolderAsync();
-
-                                    _dqueue.TryEnqueue( () => FileInfo = temp );
+                                    await _scanFilesService.StartAsync(_tokenSource.Token);
                                 } );
 
                 ProgressBarVisibility = Visibility.Collapsed;
 
                 ScanCompleted = true;
+
+                ( (SharedFileInfo) _scanFilesService.FileChanges! ).CollectionReset();
             }
             else
             {
                 _logger.Information( "Folder selection cancelled." );
             }
-        }
-
-        private async Task<ObservableCollection<MediaFileViewModel>> ScanFolderAsync()
-        {
-            await _scanFilesService.StartAsync(_tokenSource.Token);
-
-            var retVal = new ObservableCollection<MediaFileViewModel>();
-
-            foreach (var changeInfo in _config.Changes)
-            {
-                retVal.Add(new MediaFileViewModel(FolderPath, changeInfo, _logger));
-            }
-
-            return retVal;
         }
 
         public AsyncRelayCommand AdjustTimestampsCommand { get; }
@@ -132,7 +122,9 @@ namespace MediaTimestampUpdater
         {
             ProgressBarVisibility = Visibility.Visible;
             ProgressBarIsIndeterminate = false;
-            NumFilesToAdjust = _config.Changes.Count;
+
+            var changeInfo = App.Current.Resources[ "SharedFileInfo" ] as ObservableCollection<MediaFileViewModel>;
+            NumFilesToAdjust = changeInfo!.Count;
             CurrentFilesProcessed = 0;
 
             await Task.Run( async () => await _adjustTimestampService.StartAsync( _tokenSource.Token ) );
@@ -140,10 +132,16 @@ namespace MediaTimestampUpdater
             ProgressBarVisibility = Visibility.Collapsed;
         }
 
-        public string? FolderPath
+        public string FolderPath
         {
             get => _folderPath;
-            set => SetProperty( ref _folderPath, value );
+
+            set
+            {
+                SetProperty( ref _folderPath, value );
+
+                ( (SharedFileInfo) _scanFilesService.FileChanges! ).RootPath = value;
+            }
         }
 
         public bool ScanSubfolders

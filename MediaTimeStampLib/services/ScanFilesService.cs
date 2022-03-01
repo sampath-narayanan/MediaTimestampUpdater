@@ -22,12 +22,11 @@ namespace J4JSoftware.ExifTSUpdater
 
         public ScanFilesService(
             IExtractionConfig config,
-            ICollection<T> fileChanges,
             ITimestampExtractors tsExtractors,
             IHostApplicationLifetime lifetime,
             IJ4JLogger logger
         )
-        :base(config, fileChanges, lifetime, logger)
+        :base(config, lifetime, logger)
         {
             _tsExtractors = tsExtractors;
         }
@@ -37,17 +36,19 @@ namespace J4JSoftware.ExifTSUpdater
             foreach( var fileExt in _tsExtractors.SupportedExtensions )
             {
                 foreach( var filePath in Directory.EnumerateFiles( Configuration.MediaDirectory,
-                                                                  $"*{fileExt}",
-                                                                  Configuration.ScanSubfolders
-                                                                      ? SearchOption.AllDirectories
-                                                                      : SearchOption.TopDirectoryOnly ) )
+                                                                   $"*{fileExt}",
+                                                                   Configuration.ScanSubfolders
+                                                                       ? SearchOption.AllDirectories
+                                                                       : SearchOption.TopDirectoryOnly ) )
                 {
-                    FileChanges.Add( new T { FilePath = filePath } );
+                    FileChanges!.DoAction( x => x.Add( new T { FilePath = filePath } ) );
                 }
             }
 
-            foreach( var fileChange in FileChanges )
+            for( var idx=0; idx < FileChanges!.Count; idx++)
             {
+                var fileChange = FileChanges[ idx ];
+
                 try
                 {
                     _tsExtractors.GetTimestamp( fileChange );

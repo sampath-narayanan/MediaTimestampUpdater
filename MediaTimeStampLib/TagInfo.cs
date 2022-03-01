@@ -1,7 +1,11 @@
 ﻿namespace J4JSoftware.ExifTSUpdater;
 
-public record TagInfo
+public class TagInfo
 {
+    public TagInfo()
+    {
+    }
+
     public TagInfo(
         MetadataExtractor.Tag tag
     )
@@ -11,7 +15,7 @@ public record TagInfo
         Value = tag.Description;
     }
 
-    public string DirectoryName { get; init; }
-    public string TagName { get; init; }
-    public string? Value { get; init; }
+    public string DirectoryName { get; set; } = string.Empty;
+    public string TagName { get; set; } = string.Empty;
+    public string? Value { get; set; }
 }

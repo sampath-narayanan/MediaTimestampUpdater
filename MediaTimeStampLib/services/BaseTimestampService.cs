@@ -13,13 +13,11 @@ public abstract class BaseTimestampService<T> : IHostedService
 
     protected BaseTimestampService(
         IExtractionConfig config,
-        ICollection<T> fileChanges,
         IHostApplicationLifetime lifetime,
         IJ4JLogger logger
     )
     {
         Configuration = config;
-        FileChanges = fileChanges;
         Lifetime = lifetime;
 
         Logger = logger;
@@ -30,11 +28,17 @@ public abstract class BaseTimestampService<T> : IHostedService
     protected IExtractionConfig Configuration { get; }
     protected IHostApplicationLifetime Lifetime { get; }
 
-    public ICollection<T> FileChanges { get; protected set; }
+    public IMultiThreadCollection<T>? FileChanges { get; set; }
     protected int Skipped { get; set; }
 
     public virtual async Task StartAsync( CancellationToken token )
     {
+        if( FileChanges == null )
+        {
+            Logger.Fatal("FileChanges property not defined");
+            return;
+        }
+
         Started?.Invoke(this, EventArgs.Empty);
         Skipped = 0;
 
@@ -47,9 +51,13 @@ public abstract class BaseTimestampService<T> : IHostedService
 
     public virtual Task StopAsync( CancellationToken token )
     {
-        Completed?.Invoke(this, new TimestampStats(FileChanges.Count, Skipped, true));
+        if (FileChanges == null)
+            Logger.Fatal("FileChanges property not defined");
+        else
+            Completed?.Invoke(this, new TimestampStats(FileChanges.Count, Skipped, true));
 
         Lifetime.StopApplication();
+
         return Task.CompletedTask;
     }
 

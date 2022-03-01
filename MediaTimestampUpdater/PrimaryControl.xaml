@@ -54,11 +54,20 @@
         </Grid>
 
         <dataGrid:SfDataGrid Height="300"
-                       AutoGenerateColumns="True"
-                       AutoGenerateColumnsMode="ResetAll"
+                       AutoGenerateColumns="False"
                        ColumnWidthMode="Auto"
                        AllowResizingColumns="True"
-                       ItemsSource="{Binding FileInfo}">
+                       ItemsSource="{StaticResource SharedFileInfo}">
+            <dataGrid:SfDataGrid.Columns>
+                <dataGrid:GridTextColumn MappingName="DisplayPath" 
+                                         HeaderText="File Path"/>
+                <dataGrid:GridDateColumn MappingName="DateCreated" 
+                                         HeaderText="Date Created" 
+                                         DisplayDateFormat="MM/dd/yyyy HH:mm:ss"/>
+                <dataGrid:GridDateColumn MappingName="DateTaken" 
+                                         HeaderText="Date Taken"  
+                                         DisplayDateFormat="MM/dd/yyyy HH:mm:ss"/>
+            </dataGrid:SfDataGrid.Columns>
         </dataGrid:SfDataGrid>
 
         <Grid>

@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -40,12 +41,6 @@ namespace MediaTimestampUpdater
     public partial class App : Application
     {
         public new static App Current => (App)Application.Current;
-
-        public Window? MainWindow { get; private set; }
-        public IntPtr MainWindowIntPtr { get; private set; }
-        public WindowId MainWindowId { get; private set; }
-
-        public Stack<UIElement> CachedElements { get; } = new();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -80,6 +75,14 @@ namespace MediaTimestampUpdater
             logger.OutputCache(hostConfig.Logger);
         }
 
+        public Window?  MainWindow       { get; private set; }
+        public IntPtr   MainWindowIntPtr { get; private set; }
+        public WindowId MainWindowId     { get; private set; }
+
+        public Stack<UIElement> CachedElements { get; } = new();
+
+        public IJ4JHost Host { get; }
+
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.
@@ -104,16 +107,14 @@ namespace MediaTimestampUpdater
             MainWindow.Content = new PrimaryControl();
         }
 
-        public IJ4JHost Host { get; }
-
-        private static void InitializeLogger(IConfiguration config, J4JLoggerConfiguration loggerConfig)
+        private void InitializeLogger(IConfiguration config, J4JLoggerConfiguration loggerConfig)
         {
             loggerConfig.SerilogConfiguration
                         .WriteTo.File( Path.Combine( Directory.GetCurrentDirectory(), "log.txt" ),
                                       rollingInterval: RollingInterval.Day );
         }
 
-        private static void SetupDependencyInjection(HostBuilderContext hbc, ContainerBuilder builder)
+        private void SetupDependencyInjection(HostBuilderContext hbc, ContainerBuilder builder)
         {
             builder.RegisterType<ExtractionConfig>()
                    .AsImplementedInterfaces()
@@ -123,7 +124,7 @@ namespace MediaTimestampUpdater
                             .AddTests(PredefinedTypeTests.OnlyJ4JLoggerRequired)
                             .AddTests(PredefinedTypeTests.NonAbstract);
 
-            builder.RegisterTypeAssemblies<FileChangeInfo>(typeTests);
+            builder.RegisterTypeAssemblies<IFileChangeInfo>(typeTests);
 
             builder.RegisterType<TimestampExtractors>()
                    .As<ITimestampExtractors>()
@@ -133,19 +134,19 @@ namespace MediaTimestampUpdater
                    .AsSelf()
                    .SingleInstance();
 
-            builder.RegisterType<ScanFilesService>()
+            builder.RegisterType<ScanFilesService<MediaFileViewModel>>()
                    .AsSelf()
                    .SingleInstance();
 
-            builder.RegisterType<AdjustTimestampService>()
+            builder.RegisterType<AdjustTimestampService<MediaFileViewModel>>()
                    .AsSelf()
                    .SingleInstance();
         }
 
         private void InitializeServices(HostBuilderContext hbc, IServiceCollection services)
         {
-            services.AddHostedService<ScanFilesService>();
-            services.AddHostedService<AdjustTimestampService>();
+            services.AddHostedService<ScanFilesService<MediaFileViewModel>>();
+            services.AddHostedService<AdjustTimestampService<MediaFileViewModel>>();
         }
 
         // these next two methods serve to strip the project path off of source code
@@ -162,7 +163,7 @@ namespace MediaTimestampUpdater
                                                                   GetProjectPath()));
         }
 
-        private string GetProjectPath([CallerFilePath] string filePath = "")
+        private static string GetProjectPath([CallerFilePath] string filePath = "")
         {
             var dirInfo = new DirectoryInfo(Path.GetDirectoryName(filePath)!);
 

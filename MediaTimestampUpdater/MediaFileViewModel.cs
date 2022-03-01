@@ -1,54 +1,68 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using J4JSoftware.ExifTSUpdater;
 using J4JSoftware.Logging;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Dispatching;
 
 namespace MediaTimestampUpdater;
 
-public class MediaFileViewModel : ObservableObject
+public class MediaFileViewModel : ObservableObject, IFileChangeInfo
 {
-    private readonly string? _rootPath;
-    private readonly IJ4JLogger _logger;
+    private readonly DispatcherQueue _dQueue = DispatcherQueue.GetForCurrentThread();
 
-    private string? _path;
-    private DateTime _created;
+    private string _rootPath = string.Empty;
+    private string _filePath = string.Empty;
+    private DateTime?  _created;
     private DateTime? _taken;
 
-    public MediaFileViewModel(
-        string? rootPath,
-        FileChangeInfo changeInfo,
-        IJ4JLogger logger
-    )
+    public string RootPath
     {
-        _rootPath = rootPath;
-        _logger = logger;
+        get => _rootPath;
 
-        _path = changeInfo.FilePath;
-        OnPropertyChanged(nameof(DisplayPath));
+        set
+        {
+            SetProperty( ref _rootPath, value );
+            OnPropertyChanged( nameof( DisplayPath ) );
+        }
+    }
 
-        DateCreated = changeInfo.DateCreated;
-        DateTaken = changeInfo.DateTaken;
+    public bool FileExists { get; private set; }
+
+    public string FilePath
+    {
+        get => _filePath;
+
+        set
+        {
+            FileExists = File.Exists( value );
+            OnPropertyChanged(nameof(FileExists));
+
+            SetProperty( ref _filePath, value );
+            OnPropertyChanged( nameof( DisplayPath ) );
+
+            DateCreated = FileExists ? File.GetCreationTime( _filePath ) : null;
+        }
     }
 
     [Display(Name = "File Path")]
-    public string? DisplayPath
+    public string DisplayPath
     {
         get
         {
-            if( string.IsNullOrEmpty( _path ) )
-                return null;
+            if( string.IsNullOrEmpty( _filePath ) || string.IsNullOrEmpty(_rootPath) )
+                return _filePath;
 
-            if( string.IsNullOrEmpty(_rootPath))
-                return _path;
+            var rootStart = _filePath.IndexOf( _rootPath, StringComparison.OrdinalIgnoreCase );
 
-            var rootStart = _path.IndexOf( _rootPath!, StringComparison.OrdinalIgnoreCase );
-            return rootStart != 0 ? _path : _path[(_rootPath!.Length + 1)..^0];
+            return rootStart != 0 ? _filePath : _filePath[ ( _rootPath!.Length + 1 )..^0 ];
         }
     }
 
     [Display(Name = "Date File Created")]
-    public DateTime DateCreated
+    public DateTime? DateCreated
     {
         get => _created;
         set => SetProperty( ref _created, value );
@@ -61,14 +75,12 @@ public class MediaFileViewModel : ObservableObject
         set => SetProperty( ref _taken, value );
     }
 
-    public void ChangeDateCreated( DateTime? dateTaken = null )
-    {
-        dateTaken ??= DateTaken;
+    public ScanStatus ScanStatus { get; set; }
+    public string? ExtractorName { get; set; }
+    public List<TagInfo> Tags { get; } = new();
 
-        if( dateTaken == null )
-        {
-            _logger.Warning<string?>( "{0}: Date taken is undefined, date created not updated", DisplayPath );
-            return;
-        }
+    public void DoAction( Action<IFileChangeInfo> action )
+    {
+        _dQueue.TryEnqueue( () => action( this ) );
     }
 }
