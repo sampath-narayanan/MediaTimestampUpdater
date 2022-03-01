@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -14,65 +15,30 @@ using MDE = MetadataExtractor;
 
 namespace J4JSoftware.ExifTSUpdater
 {
-    public class AdjustTimestampService : IHostedService
+    public class AdjustTimestampService<T> : BaseTimestampService<T>
+        where T : class, IFileChangeInfo, new()
     {
-        public record Stats( int Total, int Skipped )
-        {
-            public int Adjusted => Total - Skipped;
-        }
-
-        public event EventHandler? Started;
-        public event EventHandler? Adjusted;
-        public event EventHandler<Stats>? Completed;
-
-        private readonly IExtractionConfig _config;
-        private readonly IHostApplicationLifetime _lifetime;
-        private readonly IJ4JLogger _logger;
-
         public AdjustTimestampService(
             IExtractionConfig config,
+            ICollection<T> fileChanges,
             IHostApplicationLifetime lifetime,
             IJ4JLogger logger
         )
+        :base( config, fileChanges, lifetime, logger )
         {
-            _config = config;
-            _lifetime = lifetime;
-
-            _logger = logger;
-            _logger.SetLoggedType( GetType() );
         }
 
-        public Task StartAsync( CancellationToken cancellationToken )
+        protected override Task Process( CancellationToken token )
         {
-            lock( _config )
+            foreach( var fileChange in FileChanges )
             {
-                Started?.Invoke(this, EventArgs.Empty  );
+                if (fileChange.ScanStatus != ScanStatus.Valid)
+                    Skipped++;
+                else
+                    File.SetCreationTime(fileChange.FilePath, fileChange.DateTaken!.Value);
 
-                var skipped = 0;
-
-                for (var idx = 0; idx < _config.Changes.Count; idx++)
-                {
-                    var curChange = _config.Changes[ idx ];
-
-                    if( curChange.ScanStatus != ScanStatus.Valid )
-                        skipped++;
-                    else
-                        File.SetCreationTime(curChange.FilePath, curChange.DateTaken!.Value);
-
-                    Adjusted?.Invoke( this, EventArgs.Empty );
-                }
-
-                Completed?.Invoke( this, new Stats( _config.Changes.Count, skipped ) );
+                OnFileProcessed(fileChange.FilePath);
             }
-
-            _lifetime.StopApplication();
-
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync( CancellationToken cancellationToken )
-        {
-            _lifetime.StopApplication();
 
             return Task.CompletedTask;
         }

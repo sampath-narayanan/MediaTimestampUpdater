@@ -7,6 +7,4 @@ public interface IExtractionConfig
     InfoToReport InfoToReport { get; set; }
     bool ReportChanges { get; }
     bool ReportTags { get; }
-
-    List<FileChangeInfo> Changes { get; }
 }

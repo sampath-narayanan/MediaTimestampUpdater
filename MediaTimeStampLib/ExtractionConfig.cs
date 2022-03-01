@@ -15,6 +15,6 @@ namespace J4JSoftware.ExifTSUpdater
         public bool ReportChanges => (InfoToReport & InfoToReport.AllTimestamps) != 0;
         public bool ReportTags => InfoToReport != InfoToReport.Nothing;
 
-        public List<FileChangeInfo> Changes { get; } = new();
+        //public List<FileChangeInfo> Changes { get; } = new();
     }
 }

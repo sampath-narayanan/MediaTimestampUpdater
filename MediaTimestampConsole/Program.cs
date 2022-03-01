@@ -124,7 +124,7 @@ namespace J4JSoftware.ExifTSUpdater
 
         private static void InitializeServices( HostBuilderContext hbc, IServiceCollection services )
         {
-            services.AddHostedService<ScanFilesService>();
+            services.AddHostedService<ScanFilesService<FileChangeInfo>>();
 
             var appConfig = hbc.Configuration.Get<AppConfig>();
             if( appConfig.SkipChanges )
@@ -133,7 +133,7 @@ namespace J4JSoftware.ExifTSUpdater
                 return;
             }
 
-            services.AddHostedService<AdjustTimestampService>();
+            services.AddHostedService<AdjustTimestampService<FileChangeInfo>>();
         }
 
         private static void SetupOptions(OptionCollection options)

@@ -6,18 +6,25 @@ using System.Threading.Tasks;
 
 namespace J4JSoftware.ExifTSUpdater
 {
-    public class FileChangeInfo
+    public class FileChangeInfo : IFileChangeInfo
     {
-        public FileChangeInfo(
-            string filePath
-        )
+        private string _filePath = string.Empty;
+
+        public string FilePath
         {
-            FilePath = filePath;
-            DateCreated = File.GetCreationTime( filePath );
+            get => _filePath;
+
+            set
+            {
+                if( !File.Exists( value ) )
+                    return;
+
+                _filePath = value;
+                DateCreated = File.GetCreationTime(FilePath);
+            }
         }
 
-        public string FilePath { get; }
-        public DateTime DateCreated { get; }
+        public DateTime DateCreated { get; set; }
         public DateTime? DateTaken { get; set; }
         public ScanStatus ScanStatus { get; set; } = ScanStatus.NotScanned;
         public string? ExtractorName { get; set; }
