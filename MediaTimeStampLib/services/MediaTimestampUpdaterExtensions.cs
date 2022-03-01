@@ -47,7 +47,7 @@ public static class MediaTimestampUpdaterExtensions
                                fileChanges.Where( x => x.ScanStatus != ScanStatus.Valid ),
                            InfoToReport.ValidTimestamps =>
                                fileChanges.Where( x => x.ScanStatus == ScanStatus.Valid ),
-                           _ => Enumerable.Empty<FileChangeInfo>()
+                           _ => Enumerable.Empty<IFileChangeInfo>()
                        };
 
         await using var fileStream =
